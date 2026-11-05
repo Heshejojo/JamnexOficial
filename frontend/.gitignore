@@ -1,0 +1,10 @@
+# Dependencias
+node_modules/
+
+# Build de producción (Render lo genera solo con el build command)
+dist/
+
+# Variables de entorno locales
+.env
+.env.*
+!.env.example
