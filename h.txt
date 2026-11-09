@@ -1,15 +1,2 @@
-SSID:	WDIS_DA
-Protocolo:	Wi-Fi 6 (802.11ax)
-Tipo de seguridad:	WPA2-Enterprise
-Fabricante:	Intel Corporation
-Descripción:	Intel(R) Wi-Fi 6 AX201 160MHz
-Versión del controlador:	23.120.0.3
-Tipo de información de inicio de sesión:	Microsoft: EAP protegido (PEAP)
-Banda de red (canal):	5 GHz (60)
-Velocidad de vínculo agregada (recepción/transmisión):	344/344 (Mbps)
-Dirección IPv6 del vínculo local:	fe80::e1aa:6855:7eed:a21b%16
-Dirección IPv4:	10.14.70.52
-Puerta de enlace predeterminada IPv4:	10.14.70.254
-Servidores DNS IPv4:	10.14.1.77 (sin cifrar)
-10.222.8.146 (sin cifrar)
-Dirección física (MAC):	34:CF:F6:09:C5:FE
+Resolve-DnsName cfe.mx -Type SOA -Server 10.14.1.77
+Resolve-DnsName cfe.mx -Type NS -Server 10.14.1.77
