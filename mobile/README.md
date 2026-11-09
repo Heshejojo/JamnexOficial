@@ -14,6 +14,8 @@ para SIMs, consumo y ejecución en segundo plano.
 - Guardar eventos pendientes cuando falla una petición.
 - Sincronizar al abrir, al recuperar Wi-Fi o datos móviles y aproximadamente
   cada dos horas.
+- Solicitar una ruta celular para la API y usar Wi-Fi como respaldo cuando la
+  conexión celular no esté disponible o falle.
 
 ## Archivos principales
 
@@ -21,6 +23,8 @@ para SIMs, consumo y ejecución en segundo plano.
 - `lib/services/api_service.dart`: cliente HTTP y token local.
 - `lib/services/device_service.dart`: construcción de `DeviceSnapshot`.
 - `lib/providers/sync_provider.dart`: persistencia y reintento de eventos.
+- `android/.../ApiNetworkClient.kt`: selección de red celular/Wi-Fi y POSTs
+  asociados a la red elegida.
 - `android/.../MainActivity.kt`: canal Flutter, permisos y trabajo periódico.
 - `android/.../JamnexApplication.kt`: observación de conectividad.
 - `android/.../JamnexSyncWorker.kt`: envío en segundo plano.
@@ -35,11 +39,18 @@ flutter build apk --debug
 ```
 
 La URL del backend debe ser alcanzable desde la red del teléfono (incluido el
-APN de la SIM) y se puede configurar al compilar con:
+APN de la SIM) y se configura al compilar con:
 
 ```powershell
-flutter build apk --dart-define=API_BASE_URL=https://api.example.com/api
+flutter build apk --dart-define=API_BASE_URL=https://jamnex-api.cfe.mx/api
 ```
+
+El hostname es provisional hasta que Infraestructura confirme el nombre DNS
+definitivo. La app solo acepta HTTPS. La política de red confía en certificados
+del sistema y en `android/app/src/main/res/raw/cfe_ca.crt` para ese hostname/IP.
+El certificado incluido actualmente es un placeholder de prueba; reemplázalo
+con la CA pública correcta antes de producción. Nunca copies una llave privada
+de CA al proyecto ni a la APK.
 
 Consulta [`../docs/operations.md`](../docs/operations.md) para permisos,
 diagnóstico de WorkManager e instalación en un dispositivo.

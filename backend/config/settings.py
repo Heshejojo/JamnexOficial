@@ -11,15 +11,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-me-32-bytes')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('1', 'true', 'yes')
-ALLOWED_HOSTS = os.getenv(
-    'ALLOWED_HOSTS',
-    'localhost,127.0.0.1,10.0.2.2,192.168.1.85,192.168.1.74'
-).split(',')
+API_DOMAIN = os.getenv('API_DOMAIN', 'jamnex-api.cfe.mx').strip()
+API_IP = os.getenv('API_IP', '10.14.64.15').strip()
+ALLOWED_HOSTS = list(dict.fromkeys([
+    *[
+        host.strip()
+        for host in os.getenv(
+            'ALLOWED_HOSTS',
+            'localhost,127.0.0.1,10.0.2.2,192.168.1.85,192.168.1.74'
+        ).split(',')
+        if host.strip()
+    ],
+    API_DOMAIN,
+    API_IP,
+]))
 
 # Dominios desde los que se aceptan peticiones POST/PUT/DELETE con CSRF
 # (necesario para el admin de Django detrás de HTTPS, p.ej. *.onrender.com)
 CSRF_TRUSTED_ORIGINS = [
-    origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+    *[
+        origin.strip()
+        for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+        if origin.strip()
+    ],
+    f'https://{API_DOMAIN}',
+    f'https://{API_IP}',
 ]
 
 INSTALLED_APPS = [
@@ -156,13 +172,28 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-default_origins = (
-    'http://localhost:5173,http://localhost:5174,http://localhost:5175,'
-    'http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,'
-    'http://10.0.2.2:5173,http://10.0.2.2:8000,'
-    'http://192.168.1.85:5173,http://192.168.1.85:5174,http://192.168.1.85:5175'
-)
+if DEBUG:
+    default_origins = (
+        'http://localhost:5173,http://localhost:5174,http://localhost:5175,'
+        'http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,'
+        'http://10.0.2.2:5173,http://10.0.2.2:8000,'
+        'http://192.168.1.85:5173,http://192.168.1.85:5174,http://192.168.1.85:5175'
+    )
+else:
+    default_origins = ''
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', default_origins).split(',')
+CORS_ALLOWED_ORIGINS = list(dict.fromkeys([
+    *[origin.strip() for origin in CORS_ALLOWED_ORIGINS if origin.strip()],
+    f'https://{API_DOMAIN}',
+    f'https://{API_IP}',
+]))
+if not DEBUG and any(
+    origin.lower().startswith('http://') for origin in CORS_ALLOWED_ORIGINS
+):
+    raise ValueError(
+        'CORS_ALLOWED_ORIGINS must use HTTPS when DEBUG=False; '
+        'remove any HTTP origins from the production environment.'
+    )
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ['*']
 CORS_ALLOW_METHODS = ['*']
@@ -170,8 +201,8 @@ CORS_ALLOW_METHODS = ['*']
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
 if not DEBUG:
-    # Render está detrás de un proxy que termina el HTTPS; esta cabecera le
-    # dice a Django que la conexión original ya venía cifrada.
+    # El proxy TLS establece esta cabecera para la conexión original.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

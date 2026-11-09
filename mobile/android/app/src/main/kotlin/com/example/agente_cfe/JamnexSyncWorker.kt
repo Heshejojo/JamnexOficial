@@ -26,7 +26,6 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import org.json.JSONObject
 import java.net.HttpURLConnection
-import java.net.URL
 import java.util.Calendar
 import kotlin.math.roundToInt
 
@@ -34,11 +33,15 @@ class JamnexSyncWorker(
 	context: Context,
 	parameters: WorkerParameters,
 ) : Worker(context, parameters) {
+	private var apiNetworkSession: ApiNetworkClient.Session? = null
+
 	override fun doWork(): Result {
 		val baseUrl = inputData.getString("base_url")?.trimEnd('/')
 		if (baseUrl.isNullOrBlank()) return Result.failure()
 
 		Log.i("JamnexSyncWorker", "Sincronización en segundo plano iniciada")
+		val networkSession = ApiNetworkClient(applicationContext).openSession()
+		apiNetworkSession = networkSession
 		return try {
 			sync(baseUrl)
 			Log.i("JamnexSyncWorker", "Sincronización en segundo plano completada")
@@ -49,6 +52,9 @@ class JamnexSyncWorker(
 		} catch (error: Exception) {
 			Log.e("JamnexSyncWorker", "La sincronización en segundo plano falló", error)
 			Result.retry()
+		} finally {
+			networkSession.close()
+			apiNetworkSession = null
 		}
 	}
 
@@ -297,26 +303,8 @@ class JamnexSyncWorker(
 		endpoint: String,
 		payload: JSONObject,
 		token: String?,
-	): Pair<Int, String> {
-		val connection = URL("$baseUrl$endpoint").openConnection() as HttpURLConnection
-		try {
-			connection.requestMethod = "POST"
-			connection.connectTimeout = 20_000
-			connection.readTimeout = 20_000
-			connection.doOutput = true
-			connection.setRequestProperty("Content-Type", "application/json")
-			if (token != null) connection.setRequestProperty("Authorization", "Device $token")
-			connection.outputStream.use { output ->
-				output.write(payload.toString().toByteArray(Charsets.UTF_8))
-			}
-			val status = connection.responseCode
-			val bodyStream = if (status in 200..299) connection.inputStream else connection.errorStream
-			val body = bodyStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-			return status to body
-		} finally {
-			connection.disconnect()
-		}
-	}
+	): Pair<Int, String> = apiNetworkSession?.post(baseUrl, endpoint, payload, token)
+		?: error("La sesión de red para la API no está disponible.")
 
 	private fun connectionState(): Pair<Boolean, String> {
 		val manager = applicationContext.getSystemService(ConnectivityManager::class.java)

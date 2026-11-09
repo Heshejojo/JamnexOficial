@@ -159,19 +159,21 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           },
         });
       }
-      await _apiService.registerDevice(devicePayload);
-      await _syncProvider.retry((item) async {
-        final payload =
-            Map<String, dynamic>.from(item['payload'] as Map? ?? {});
-        payload['device_uuid'] = deviceUuid;
-        await _postDeviceEvent(item['endpoint'] as String, payload);
+      await _apiService.withNetworkSession(() async {
+        await _apiService.registerDevice(devicePayload);
+        await _syncProvider.retry((item) async {
+          final payload =
+              Map<String, dynamic>.from(item['payload'] as Map? ?? {});
+          payload['device_uuid'] = deviceUuid;
+          await _postDeviceEvent(item['endpoint'] as String, payload);
+        });
+        for (final event in pendingEvents) {
+          await _postDeviceEvent(
+            event['endpoint'] as String,
+            Map<String, dynamic>.from(event['payload'] as Map),
+          );
+        }
       });
-      for (final event in pendingEvents) {
-        await _postDeviceEvent(
-          event['endpoint'] as String,
-          Map<String, dynamic>.from(event['payload'] as Map),
-        );
-      }
 
       if (mounted) {
         setState(() {

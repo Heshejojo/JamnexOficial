@@ -47,11 +47,13 @@ computadora; en el emulador Android normalmente se usa `10.0.2.2`.
 
 ```env
 SECRET_KEY=valor-secreto
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
+DEBUG=False
+API_DOMAIN=jamnex-api.cfe.mx
+API_IP=10.14.64.15
+ALLOWED_HOSTS=localhost,127.0.0.1,jamnex-api.cfe.mx,10.14.64.15
 DATABASE_URL=postgresql://usuario:password@host/base?sslmode=require
-CORS_ALLOWED_ORIGINS=http://localhost:5173
-CSRF_TRUSTED_ORIGINS=http://localhost:5173
+CORS_ALLOWED_ORIGINS=https://jamnex-api.cfe.mx
+CSRF_TRUSTED_ORIGINS=https://jamnex-api.cfe.mx,https://10.14.64.15
 ```
 
 Si `DATABASE_URL` no existe, el proyecto usa SQLite local según la
@@ -60,7 +62,7 @@ configuración vigente.
 ### Frontend
 
 ```env
-VITE_API_BASE_URL=http://127.0.0.1:8000/api
+VITE_API_BASE_URL=/api
 ```
 
 La URL compilada de Flutter se configura con el mecanismo
@@ -68,8 +70,16 @@ La URL compilada de Flutter se configura con el mecanismo
 compilar, por ejemplo:
 
 ```powershell
-flutter build apk --dart-define=API_BASE_URL=https://api.example.com/api
+flutter build apk --dart-define=API_BASE_URL=https://jamnex-api.cfe.mx/api
 ```
+
+El hostname es provisional hasta que Infraestructura confirme el nombre
+definitivo. El frontend usa `/api` relativo para ir al mismo origen HTTPS. El
+proxy Vite hacia Django por loopback y los orígenes HTTP locales de CORS solo se
+usan en desarrollo.
+
+Para configurar HTTPS de la API en Debian, certificados de prueba/CA de CFE y
+Nginx, consulta [`../backend/deploy/https.md`](../backend/deploy/https.md).
 
 ## 3. Migraciones
 
@@ -126,8 +136,15 @@ No deben publicarse `.env`, tokens de dispositivo, claves JWT ni contraseñas.
 
 ```powershell
 adb shell dumpsys jobscheduler
-adb logcat -d | Select-String "JamnexSyncWorker|Worker result"
+adb logcat -d | Select-String "JamnexApiNetwork|JamnexSyncWorker|Worker result"
 ```
+
+`JamnexApiNetwork` indica si Android concedió una red celular (`Red celular
+disponible`) y por cuál transporte se envió cada solicitud. Si aparece
+`Red celular no disponible`, revisa que los datos móviles estén habilitados y
+que el APN sea del tipo `default`; el APN debe anunciar conectividad `INTERNET`.
+Un timeout en ambas redes indica un problema de ruta, DNS o firewall hacia el
+backend, no de selección del transporte.
 
 Un resultado correcto aparece como:
 

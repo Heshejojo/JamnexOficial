@@ -1,16 +1,31 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
+  static const MethodChannel _apiChannel = MethodChannel('agente_cfe/api');
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.14.64.15:8000/api',
+    defaultValue: 'https://jamnex-api.cfe.mx/api',
   );
 
   String? _deviceToken;
+
+  Future<T> withNetworkSession<T>(Future<T> Function() action) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return action();
+    }
+
+    await _apiChannel.invokeMethod<void>('beginNetworkSession');
+    try {
+      return await action();
+    } finally {
+      await _apiChannel.invokeMethod<void>('endNetworkSession');
+    }
+  }
 
   void setDeviceToken(String token) {
     _deviceToken = token;
@@ -64,27 +79,51 @@ class ApiService {
     Map<String, dynamic> payload, {
     String? deviceToken,
   }) async {
-    final response = await http
-        .post(
-          Uri.parse('$baseUrl$endpoint'),
-          headers: {
-            'Content-Type': 'application/json',
-            if (deviceToken != null) 'Authorization': 'Device $deviceToken',
-          },
-          body: jsonEncode(payload),
-        )
-        .timeout(const Duration(seconds: 60));
+    late final int statusCode;
+    late final String responseBody;
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final response = await _apiChannel.invokeMapMethod<String, dynamic>(
+        'postJson',
+        {
+          'baseUrl': baseUrl,
+          'endpoint': endpoint,
+          'payload': payload,
+          'token': deviceToken,
+        },
+      );
+      if (response == null || response['statusCode'] is! int) {
+        throw const ApiException(
+          statusCode: 502,
+          message: 'Respuesta inválida del cliente de red Android.',
+        );
+      }
+      statusCode = response['statusCode'] as int;
+      responseBody = response['body'] as String? ?? '';
+    } else {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$endpoint'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (deviceToken != null) 'Authorization': 'Device $deviceToken',
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 60));
+      statusCode = response.statusCode;
+      responseBody = response.body;
+    }
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isEmpty) {
+    if (statusCode >= 200 && statusCode < 300) {
+      if (responseBody.isEmpty) {
         return <String, dynamic>{};
       }
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      return jsonDecode(responseBody) as Map<String, dynamic>;
     }
 
     throw ApiException(
-      statusCode: response.statusCode,
-      message: response.body,
+      statusCode: statusCode,
+      message: responseBody,
     );
   }
 }

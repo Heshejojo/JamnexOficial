@@ -18,6 +18,7 @@ import android.os.StatFs
 import android.telephony.TelephonyManager
 import android.content.pm.ApplicationInfo
 import android.telephony.SubscriptionManager
+import org.json.JSONObject
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.work.Constraints
@@ -36,8 +37,11 @@ import kotlin.math.roundToInt
 
 class MainActivity : FlutterActivity() {
 	private val channelName = "agente_cfe/sim"
+	private val apiChannelName = "agente_cfe/api"
 	private val permissionRequestCode = 901
 	private var usageAccessPromptShown = false
+	private val apiNetworkSessionLock = Any()
+	private var apiNetworkSession: ApiNetworkClient.Session? = null
 
 	private fun hasUsageAccess(): Boolean {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
@@ -151,6 +155,59 @@ class MainActivity : FlutterActivity() {
 
 	override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
 		super.configureFlutterEngine(flutterEngine)
+		MethodChannel(flutterEngine.dartExecutor.binaryMessenger, apiChannelName).setMethodCallHandler { call, result ->
+			when (call.method) {
+				"beginNetworkSession" -> Thread {
+					try {
+						val session = ApiNetworkClient(applicationContext).openSession()
+						synchronized(apiNetworkSessionLock) {
+							apiNetworkSession?.close()
+							apiNetworkSession = session
+						}
+						result.success(null)
+					} catch (error: Exception) {
+						result.error("network_session_failed", error.message, null)
+					}
+				}.start()
+
+				"endNetworkSession" -> {
+					synchronized(apiNetworkSessionLock) {
+						apiNetworkSession?.close()
+						apiNetworkSession = null
+					}
+					result.success(null)
+				}
+
+				"postJson" -> {
+					val baseUrl = call.argument<String>("baseUrl")
+					val endpoint = call.argument<String>("endpoint")
+					val payload = call.argument<Map<String, Any?>>("payload")
+					val token = call.argument<String>("token")
+					if (baseUrl.isNullOrBlank() || endpoint.isNullOrBlank() || payload == null) {
+						result.error("invalid_api_request", "Faltan datos para la solicitud API.", null)
+						return@setMethodCallHandler
+					}
+					Thread {
+						try {
+							val session = synchronized(apiNetworkSessionLock) { apiNetworkSession }
+							val response = if (session != null) {
+								session.post(baseUrl, endpoint, JSONObject(payload), token)
+							} else {
+								ApiNetworkClient(applicationContext).openSession().use {
+									it.post(baseUrl, endpoint, JSONObject(payload), token)
+								}
+							}
+							result.success(mapOf("statusCode" to response.first, "body" to response.second))
+						} catch (error: Exception) {
+							result.error("api_request_failed", error.message, null)
+						}
+					}.start()
+				}
+
+				else -> result.notImplemented()
+			}
+		}
+
 		MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName).setMethodCallHandler { call, result ->
 			if (call.method == "scheduleBackgroundSync") {
 				val baseUrl = call.argument<String>("baseUrl")
