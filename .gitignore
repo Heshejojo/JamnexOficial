@@ -1,0 +1,14 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Flutter / Android (se regeneran solos)
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins-dependencies
+mobile/android/local.properties
+mobile/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
