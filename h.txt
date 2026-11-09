@@ -1,72 +1,15 @@
-Windows PowerShell
-Copyright (C) Microsoft Corporation. All rights reserved.
-
-Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
-
-PS C:\WINDOWS\System32> Get-NetIPConfiguration
-
-
-InterfaceAlias       : Wi-Fi
-InterfaceIndex       : 16
-InterfaceDescription : Intel(R) Wi-Fi 6 AX201 160MHz
-NetProfile.Name      : cfe.mx
-IPv4Address          : 10.14.70.52
-IPv6DefaultGateway   :
-IPv4DefaultGateway   : 10.14.70.254
-DNSServer            : 10.14.1.77
-                       10.222.8.146
-
-InterfaceAlias       : Ethernet
-InterfaceIndex       : 3
-InterfaceDescription : Realtek PCIe GbE Family Controller
-NetAdapter.Status    : Disconnected
-
-
-
-PS C:\WINDOWS\System32>
-PS C:\WINDOWS\System32>
-PS C:\WINDOWS\System32>
-PS C:\WINDOWS\System32>
-PS C:\WINDOWS\System32>
-PS C:\WINDOWS\System32>
-PS C:\WINDOWS\System32> Resolve-DnsName debianpostgresdlspiloto.cfe.mx
-Resolve-DnsName : debianpostgresdlspiloto.cfe.mx : El nombre DNS no existe
-En línea: 1 Carácter: 1
-+ Resolve-DnsName debianpostgresdlspiloto.cfe.mx
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : ResourceUnavailable: (debianpostgresdlspiloto.cfe.mx:String) [Resolve-DnsName], Win32Exception
-    + FullyQualifiedErrorId : DNS_ERROR_RCODE_NAME_ERROR,Microsoft.DnsClient.Commands.ResolveDnsName
-
-PS C:\WINDOWS\System32> Resolve-DnsName debianpostgresdlspiloto.cfe.mx
-Resolve-DnsName : debianpostgresdlspiloto.cfe.mx : El nombre DNS no existe
-En línea: 1 Carácter: 1
-+ Resolve-DnsName debianpostgresdlspiloto.cfe.mx
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : ResourceUnavailable: (debianpostgresdlspiloto.cfe.mx:String) [Resolve-DnsName], Win32Exception
-    + FullyQualifiedErrorId : DNS_ERROR_RCODE_NAME_ERROR,Microsoft.DnsClient.Commands.ResolveDnsName
-
-PS C:\WINDOWS\System32> Test-NetConnection 10.14.64.15 -Port 8000
-
-
-ComputerName     : 10.14.64.15
-RemoteAddress    : 10.14.64.15
-RemotePort       : 8000
-InterfaceAlias   : Wi-Fi
-SourceAddress    : 10.14.70.52
-TcpTestSucceeded : True
-
-
-
-PS C:\WINDOWS\System32> curl.exe --max-time 5 http://debianpostgresdlspiloto.cfe.mx:8000/api/
-curl.exe : El término 'curl.exe' no se reconoce como nombre de un cmdlet, función, archivo de script o programa ejecutable.
-Compruebe si escribió correctamente el nombre o, si incluyó una ruta de acceso, compruebe que dicha ruta es correcta e inténtelo de
-nuevo.
-En línea: 1 Carácter: 1
-+ curl.exe --max-time 5 http://debianpostgresdlspiloto.cfe.mx:8000/api/
-+ ~~~~~~~~
-    + CategoryInfo          : ObjectNotFound: (curl.exe:String) [], CommandNotFoundException
-    + FullyQualifiedErrorId : CommandNotFoundException
-
-
-Suggestion [3,General]: No se encontró el comando curl.exe, pero existe en la ubicación actual. Windows PowerShell no carga comandos de la ubicación actual de forma predeterminada. Si confía en este comando, escriba ".\curl.exe". Vea "get-help about_Command_Precedence" para obtener información más detallada.
-PS C:\WINDOWS\System32>
+SSID:	WDIS_DA
+Protocolo:	Wi-Fi 6 (802.11ax)
+Tipo de seguridad:	WPA2-Enterprise
+Fabricante:	Intel Corporation
+Descripción:	Intel(R) Wi-Fi 6 AX201 160MHz
+Versión del controlador:	23.120.0.3
+Tipo de información de inicio de sesión:	Microsoft: EAP protegido (PEAP)
+Banda de red (canal):	5 GHz (60)
+Velocidad de vínculo agregada (recepción/transmisión):	344/344 (Mbps)
+Dirección IPv6 del vínculo local:	fe80::e1aa:6855:7eed:a21b%16
+Dirección IPv4:	10.14.70.52
+Puerta de enlace predeterminada IPv4:	10.14.70.254
+Servidores DNS IPv4:	10.14.1.77 (sin cifrar)
+10.222.8.146 (sin cifrar)
+Dirección física (MAC):	34:CF:F6:09:C5:FE
