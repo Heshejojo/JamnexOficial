@@ -1,5 +1,3 @@
-Get-DnsServerZone -ComputerName 10.14.1.77 -Name cfe.mx |
-  Format-List ZoneName,ZoneType,IsDsIntegrated,IsReadOnly
+Cada 0.5s: ss -nt state syn-recv sport = :8000                                                              debianpostgresdlspiloto: Mon Nov  9 14:29:25 2026
 
-  Get-DnsServerResourceRecord -ComputerName 10.14.1.77 `
-  -ZoneName cfe.mx -Name api-jamnex
+Recv-Q                  Send-Q                                     Local Address:Port                                     Peer Address:Port
