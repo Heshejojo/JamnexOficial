@@ -1,10 +1,5 @@
-The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
-
-  VITE v5.4.21  ready in 413 ms
-
-  ➜  Local:   http://localhost:5174/
-  ➜  Network: http://10.14.64.15:5174/
-  ➜  press h + enter to show help
-Dice credeciales invalidadas por que?
-
-Solicitud de origen cruzado bloqueada: La misma política de origen no permite la lectura de recursos remotos en http://10.14.64.15:5175/api/auth/login/. (Razón: Solicitud CORS sin éxito). Código de estado: (null).
+hostname -f
+ip -brief address
+systemctl is-active nginx apache2
+sudo ss -lntp | grep -E ':(80|443|8000)\b'
+curl -i --max-time 5 http://127.0.0.1:8000/api/
