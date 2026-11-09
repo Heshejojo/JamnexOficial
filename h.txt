@@ -1,13 +1,1 @@
-oseluis@debianpostgresdlspiloto:~/JamnexCFE$ ^[[200~hostname -f
-bash: $'\E[200~hostname': orden no encontrada
-joseluis@debianpostgresdlspiloto:~/JamnexCFE$ ip -brief address
-lo               UNKNOWN        127.0.0.1/8 ::1/128 
-ens18            UP             10.14.64.15/26 fe80::be24:11ff:fe8d:85dd/64 
-joseluis@debianpostgresdlspiloto:~/JamnexCFE$ systemctl is-active nginx apache2
-inactive
-inactive
-joseluis@debianpostgresdlspiloto:~/JamnexCFE$ sudo ss -lntp | grep -E ':(80|443|8000)\b'
-[sudo] contraseña para joseluis: 
-Lo siento, pruebe otra vez.
-[sudo] contraseña para joseluis: 
-LISTEN 0      2048         0.0.0.0:8000       0.0.0.0
+sudo tcpdump -ni any 'host 10.244.59.155 and tcp port 8000'
