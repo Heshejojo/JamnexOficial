@@ -1,0 +1,8 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+  VITE v5.4.21  ready in 413 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: http://10.14.64.15:5174/
+  ➜  press h + enter to show help
+Dice credeciales invalidadas por que?
