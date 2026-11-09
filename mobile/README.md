@@ -12,8 +12,8 @@ para SIMs, consumo y ejecución en segundo plano.
 - Consultar datos móviles con `NetworkStatsManager`.
 - Enviar registros al backend con una credencial de dispositivo.
 - Guardar eventos pendientes cuando falla una petición.
-- Sincronizar al abrir, al recuperar conectividad y aproximadamente cada dos
-  horas.
+- Sincronizar al abrir, al recuperar Wi-Fi o datos móviles y aproximadamente
+  cada dos horas.
 
 ## Archivos principales
 
@@ -34,7 +34,8 @@ flutter run
 flutter build apk --debug
 ```
 
-La URL se puede configurar con:
+La URL del backend debe ser alcanzable desde la red del teléfono (incluido el
+APN de la SIM) y se puede configurar al compilar con:
 
 ```powershell
 flutter build apk --dart-define=API_BASE_URL=https://api.example.com/api

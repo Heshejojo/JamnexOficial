@@ -14,7 +14,7 @@ import androidx.work.workDataOf
 import io.flutter.app.FlutterApplication
 
 class JamnexApplication : FlutterApplication() {
-	private var wifiAvailable = false
+	private var activeNetworkTransport: String? = null
 
 	override fun onCreate() {
 		super.onCreate()
@@ -26,9 +26,7 @@ class JamnexApplication : FlutterApplication() {
 			connectivityManager.registerDefaultNetworkCallback(
 				object : ConnectivityManager.NetworkCallback() {
 					override fun onAvailable(network: Network) {
-						updateWifiState(
-							isUsableWifi(connectivityManager.getNetworkCapabilities(network)),
-						)
+						updateNetworkState(networkTransport(connectivityManager.getNetworkCapabilities(network)))
 					}
 
 					override fun onCapabilitiesChanged(
@@ -36,40 +34,46 @@ class JamnexApplication : FlutterApplication() {
 						networkCapabilities: NetworkCapabilities,
 					) {
 						if (connectivityManager.activeNetwork == network) {
-							updateWifiState(isUsableWifi(networkCapabilities))
+							updateNetworkState(networkTransport(networkCapabilities))
 						}
 					}
 
 					override fun onLost(network: Network) {
 						val activeNetwork = connectivityManager.activeNetwork
-						updateWifiState(
-							activeNetwork != null &&
-								isUsableWifi(connectivityManager.getNetworkCapabilities(activeNetwork)),
+						updateNetworkState(
+							activeNetwork?.let {
+								networkTransport(connectivityManager.getNetworkCapabilities(it))
+							},
 						)
 					}
 				},
 			)
-			updateWifiState(
-				isUsableWifi(
-					connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork),
-				),
+			updateNetworkState(
+				connectivityManager.activeNetwork?.let {
+					networkTransport(connectivityManager.getNetworkCapabilities(it))
+				},
 			)
 		} catch (error: RuntimeException) {
 			Log.e("JamnexApplication", "No se pudo observar la conexión de red", error)
 		}
 	}
 
-	private fun isUsableWifi(capabilities: NetworkCapabilities?): Boolean =
-		capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
-			capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-			(Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-				capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED))
+	private fun networkTransport(capabilities: NetworkCapabilities?): String? {
+		if (capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) != true) {
+			return null
+		}
+		return when {
+			capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "Wi-Fi"
+			capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "datos móviles"
+			else -> null
+		}
+	}
 
 	@Synchronized
-	private fun updateWifiState(isAvailable: Boolean) {
-		val justConnectedToWifi = isAvailable && !wifiAvailable
-		wifiAvailable = isAvailable
-		if (!justConnectedToWifi) return
+	private fun updateNetworkState(transport: String?) {
+		val networkChanged = transport != null && transport != activeNetworkTransport
+		activeNetworkTransport = transport
+		if (!networkChanged) return
 
 		val preferences = getSharedPreferences("JamnexBackgroundSync", Context.MODE_PRIVATE)
 		val baseUrl = preferences.getString("base_url", null)?.trimEnd('/')
@@ -85,11 +89,11 @@ class JamnexApplication : FlutterApplication() {
 			.build()
 		try {
 			WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-				"jamnex_wifi_sync",
+				"jamnex_network_sync",
 				ExistingWorkPolicy.REPLACE,
 				request,
 			)
-			Log.i("JamnexApplication", "Sincronización programada al conectar Wi-Fi")
+			Log.i("JamnexApplication", "Sincronización programada al conectar Wi-Fi o datos móviles")
 		} catch (error: IllegalStateException) {
 			Log.e("JamnexApplication", "No se pudo programar la sincronización de red", error)
 		}

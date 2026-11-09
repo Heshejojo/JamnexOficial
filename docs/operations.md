@@ -110,15 +110,19 @@ No deben publicarse `.env`, tokens de dispositivo, claves JWT ni contraseñas.
 
 ## 5. Diagnóstico de sincronización Android
 
-### Síntoma: no reporta al conectar Wi-Fi
+### Síntoma: no reporta al conectar Wi-Fi o datos móviles
 
 1. Abrir la app una vez después de instalarla.
-2. Confirmar que el backend responde desde el navegador del dispositivo.
-3. Revisar que la aplicación no esté en “Forzar detención”.
-4. Quitar restricciones de batería:
+2. Confirmar que el APN de la SIM está configurado por el operador y que el
+   backend responde desde el navegador del dispositivo usando esa conexión.
+3. Confirmar que `API_BASE_URL` en la APK apunta al backend, no al puerto de
+   Vite; en desarrollo Django usa el puerto `8000`.
+4. Revisar que la aplicación no esté en “Forzar detención”.
+5. Quitar restricciones de batería:
    `Ajustes > Aplicaciones > Jamnex > Batería > Sin restricciones`.
-5. Confirmar que la red tenga Internet real, no solo conexión al router.
-6. Revisar el estado de WorkManager:
+6. Confirmar que la red permita llegar al servidor; una IP privada solo será
+   accesible si el APN enruta a esa red.
+7. Revisar el estado de WorkManager:
 
 ```powershell
 adb shell dumpsys jobscheduler
