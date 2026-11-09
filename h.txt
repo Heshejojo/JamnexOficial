@@ -6,3 +6,5 @@ The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troub
   ➜  Network: http://10.14.64.15:5174/
   ➜  press h + enter to show help
 Dice credeciales invalidadas por que?
+
+Solicitud de origen cruzado bloqueada: La misma política de origen no permite la lectura de recursos remotos en http://10.14.64.15:5175/api/auth/login/. (Razón: Solicitud CORS sin éxito). Código de estado: (null).
