@@ -1,2 +1,237 @@
-Resolve-DnsName cfe.mx -Type SOA -Server 10.14.1.77
-Resolve-DnsName cfe.mx -Type NS -Server 10.14.1.77
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\WINDOWS\System32> Resolve-DnsName cfe.mx -Type SOA -Server 10.14.1.77
+
+Name                        Type TTL   Section    PrimaryServer               NameAdministrator           SerialNumber
+----                        ---- ---   -------    -------------               -----------------           ------------
+cfe.mx                      SOA  3600  Answer     dc000-di-02.cfe.mx          hostmaster.cfe.mx           52428620
+
+Name       : dc000-di-02.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.14.1.77
+
+
+
+PS C:\WINDOWS\System32> Resolve-DnsName cfe.mx -Type NS -Server 10.14.1.77
+
+Name                           Type   TTL   Section    NameHost
+----                           ----   ---   -------    --------
+cfe.mx                         NS     3600  Answer     db000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dm000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dk000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     ba000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     du000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-09.cfe.mx
+cfe.mx                         NS     3600  Answer     k4310-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     d3100-di-02.cfe.mx
+cfe.mx                         NS     3600  Answer     hc001-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     su000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     k3093-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     k4310-di-02.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dm000-di-02.cfe.mx
+cfe.mx                         NS     3600  Answer     dp000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     sk000-di-02.cfe.mx
+cfe.mx                         NS     3600  Answer     dd000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     pw000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-02.cfe.mx
+cfe.mx                         NS     3600  Answer     sd000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     sj000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dcoc-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     pj000-di-02.cfe.mx
+cfe.mx                         NS     3600  Answer     dv000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     hj000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dc000-di-02.cfe.mx
+cfe.mx                         NS     3600  Answer     pb000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     sp000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-05.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-07.cfe.mx
+cfe.mx                         NS     3600  Answer     dn000-di-02.cfe.mx
+cfe.mx                         NS     3600  Answer     hb000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dw000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     he000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-06.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-08.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-03.cfe.mx
+cfe.mx                         NS     3600  Answer     sx0001-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     sb000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     j1410-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dg000-di-01.cfe.mx
+cfe.mx                         NS     3600  Answer     dce-infra-da-04.cfe.mx
+
+Name       : db000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.13.187.4
+
+
+Name       : dm000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.57.16.84
+
+
+Name       : dk000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.18.1.30
+
+
+Name       : ba000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.33.13.175
+
+
+Name       : du000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.11.2.193
+
+
+Name       : dce-infra-da-09.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.222.8.148
+
+
+Name       : k4310-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.225.2.148
+
+
+Name       : d3100-di-02.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.16.210.34
+
+
+Name       : hc001-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.4.70.65
+
+
+Name       : su000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.156.5.250
+
+
+Name       : k3093-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.44.7.24
+
+
+Name       : k4310-di-02.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.55.160.15
+
+
+Name       : dce-infra-da-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.222.8.140
+
+
+Name       : dm000-di-02.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.57.31.12
+
+
+Name       : dp000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.12.1.1
+
+
+Name       : sk000-di-02.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.151.1.36
+
+
+Name       : dd000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.4.90.60
+
+
+Name       : pw000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.28.1.26
+
+
+Name       : dce-infra-da-02.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.222.8.141
+
+
+Name       : sd000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.19.147.3
+
+
+Name       : sj000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.150.26.61
+
+
+Name       : dcoc-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.8.15.112
+
+
+Name       : pj000-di-02.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.26.2.33
+
+
+Name       : dv000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.9.1.25
+
+
+Name       : hj000-di-01.cfe.mx
+QueryType  : A
+TTL        : 3600
+Section    : Additional
+IP4Address : 10.41.6.138
