@@ -46,6 +46,12 @@ class ApiNetworkClient(context: Context) {
 		val callback = object : ConnectivityManager.NetworkCallback() {
 			override fun onAvailable(availableNetwork: Network) {
 				Log.i(TAG, "Red $label disponible")
+				val linkProperties = connectivityManager.getLinkProperties(availableNetwork)
+				Log.i(
+					TAG,
+					"Propiedades red $label: linkAddresses=${linkProperties?.linkAddresses}, " +
+						"dnsServers=${linkProperties?.dnsServers}, routes=${linkProperties?.routes}",
+				)
 				network.set(availableNetwork)
 				available.countDown()
 			}
@@ -165,7 +171,7 @@ class ApiNetworkClient(context: Context) {
 
 	private companion object {
 		const val TAG = "JamnexApiNetwork"
-		const val NETWORK_REQUEST_TIMEOUT_MS = 8_000
+		const val NETWORK_REQUEST_TIMEOUT_MS = 20_000
 		const val CONNECT_TIMEOUT_MS = 8_000
 		const val READ_TIMEOUT_MS = 20_000
 	}
