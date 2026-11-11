@@ -1,3 +1,6 @@
-sudo tcpdump -ni any "port 8000 or port 443 or port 80"
 ss -tlnp | grep -E ":(80|443|8000)"
 sudo ufw status
+[sudo] contraseña para joseluis: 
+sudo: tcpdump: command not found
+LISTEN 0      2048         0.0.0.0:8000       0.0.0.0:*    users:(("gunicorn",pid=1220110,fd=3),("gunicorn",pid=1220041,fd=3),("gunicorn",pid=1219726,fd=3),("gunicorn",pid=1219722,fd=3))
+sudo: ufw: command not found
