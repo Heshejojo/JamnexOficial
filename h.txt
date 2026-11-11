@@ -1,6 +1,3 @@
-ss -tlnp | grep -E ":(80|443|8000)"
-sudo ufw status
-[sudo] contraseña para joseluis: 
-sudo: tcpdump: command not found
-LISTEN 0      2048         0.0.0.0:8000       0.0.0.0:*    users:(("gunicorn",pid=1220110,fd=3),("gunicorn",pid=1220041,fd=3),("gunicorn",pid=1219726,fd=3),("gunicorn",pid=1219722,fd=3))
-sudo: ufw: command not found
+sudo -u postgres psql -c '\du'
+
+grep -E '^(DB_USER|DATABASE_URL)=' /ruta/a/JamnexOficial/backend/.env
