@@ -368,7 +368,11 @@ async function loadSims() {
       const device = devices.find((item) => String(item.id) === String(sim.dispositivo));
       const rowDevice = devices.find((item) => String(item.id) === String(historyDevice.dispositivo));
       const lastSevenDays = Date.now() - (7 * 24 * 60 * 60 * 1000);
-      const simConsumption = consumption.filter((c) => Number(c.sim) === Number(sim.id));
+      const historyDeviceId = String(historyDevice.dispositivo ?? '');
+      const simConsumption = consumption.filter((c) =>
+        Number(c.sim) === Number(sim.id) &&
+        String(c.dispositivo ?? '') === historyDeviceId
+      );
       const dailyConsumption = simConsumption.filter((c) =>
         c.periodo === 'diario' && c.fecha && new Date(c.fecha).getTime() >= lastSevenDays
       );
@@ -455,11 +459,10 @@ const monthlyTotals = computed(() => {
     if (item.periodo === 'mensual') {
       const current = monthlyRecords.get(deviceKey);
       if (!current || new Date(item.fecha) > new Date(current.fecha)) {
-        monthlyRecords.set(deviceKey, { simId, amount, fecha: item.fecha });
+        monthlyRecords.set(deviceKey, { amount, fecha: item.fecha });
       }
     } else if (item.periodo === 'diario') {
       dailyTotals.set(deviceKey, {
-        simId,
         amount: (dailyTotals.get(deviceKey)?.amount || 0) + amount,
       });
     }
@@ -467,20 +470,19 @@ const monthlyTotals = computed(() => {
 
   const totals = new Map();
   for (const [deviceKey, daily] of dailyTotals) {
-    if (monthlyRecords.has(deviceKey)) continue;
-    totals.set(daily.simId, (totals.get(daily.simId) || 0) + daily.amount);
+    if (!monthlyRecords.has(deviceKey)) {
+      totals.set(deviceKey, daily.amount);
+    }
   }
-  for (const monthly of monthlyRecords.values()) {
-    totals.set(
-      monthly.simId,
-      (totals.get(monthly.simId) || 0) + monthly.amount,
-    );
+  for (const [deviceKey, monthly] of monthlyRecords) {
+    totals.set(deviceKey, monthly.amount);
   }
   return totals;
 });
 
 function monthlyUsed(sim) {
-  return monthlyTotals.value.get(Number(sim?.id)) || 0;
+  const key = `${Number(sim?.id)}:${String(sim?.dispositivo ?? 'unknown')}`;
+  return monthlyTotals.value.get(key) || 0;
 }
 
 function usagePercent(sim) {

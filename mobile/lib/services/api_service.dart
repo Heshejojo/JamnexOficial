@@ -58,20 +58,43 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> postDeviceJson(
-      String endpoint, Map<String, dynamic> payload) {
-    if (_deviceToken == null) {
-      throw const ApiException(
-          statusCode: 401, message: 'El dispositivo no está registrado.');
+    String endpoint,
+    Map<String, dynamic> payload, {
+    Map<String, dynamic>? registrationPayload,
+  }) async {
+    var token = _deviceToken;
+    if (token == null || token.isEmpty) {
+      if (registrationPayload != null) {
+        token = await registerDevice(registrationPayload);
+      } else {
+        throw const ApiException(
+            statusCode: 401, message: 'El dispositivo no está registrado.');
+      }
     }
-    return _post(endpoint, payload, deviceToken: _deviceToken);
+
+    try {
+      return await _post(endpoint, payload, deviceToken: token);
+    } on ApiException catch (error) {
+      if (registrationPayload == null ||
+          (error.statusCode != 401 && error.statusCode != 403)) {
+        rethrow;
+      }
+      final refreshedToken = await registerDevice(registrationPayload);
+      return _post(endpoint, payload, deviceToken: refreshedToken);
+    }
   }
 
   Future<void> postDeviceJsonIfAvailable(
     String endpoint,
-    Map<String, dynamic> payload,
-  ) async {
+    Map<String, dynamic> payload, {
+    Map<String, dynamic>? registrationPayload,
+  }) async {
     try {
-      await postDeviceJson(endpoint, payload);
+      await postDeviceJson(
+        endpoint,
+        payload,
+        registrationPayload: registrationPayload,
+      );
     } on ApiException catch (error) {
       if (error.statusCode != 404) rethrow;
       debugPrint(

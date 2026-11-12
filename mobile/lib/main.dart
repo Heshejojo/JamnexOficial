@@ -8,6 +8,7 @@ import 'models/device_snapshot.dart';
 import 'services/api_service.dart';
 import 'services/device_service.dart';
 import 'providers/sync_provider.dart';
+import 'widgets/edit_identity_dialog.dart';
 
 void main() {
   runApp(const AgenteCfeApp());
@@ -152,13 +153,16 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           snapshot.sims.map((sim) => _simUuid(deviceUuid, sim)).toSet();
       final identitySims = _iccidOverrides.entries
           .where((entry) => currentSimIds.contains(entry.key))
-          .map((entry) => <String, dynamic>{
-                'sim_uuid': entry.value['sim_uuid'],
-                if (entry.value['slot'] is int && entry.value['slot'] >= 0)
-                  'slot': entry.value['slot'],
-                'iccid': entry.value['iccid'],
-              })
-          .toList();
+          .map((entry) {
+        final slot = entry.value['slot'];
+        return <String, dynamic>{
+          if (slot is int && slot >= 0)
+            'slot': slot
+          else
+            'sim_uuid': entry.value['sim_uuid'],
+          'iccid': entry.value['iccid'],
+        };
+      }).toList();
       final identityPayload = <String, dynamic>{
         if (_serialOverride != null) 'serial': _serialOverride,
         if (identitySims.isNotEmpty) 'sims': identitySims,
@@ -192,12 +196,17 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           final payload =
               Map<String, dynamic>.from(item['payload'] as Map? ?? {});
           payload['device_uuid'] = deviceUuid;
-          await _postDeviceEvent(item['endpoint'] as String, payload);
+          await _postDeviceEvent(
+            item['endpoint'] as String,
+            payload,
+            devicePayload,
+          );
         });
         for (final event in pendingEvents) {
           await _postDeviceEvent(
             event['endpoint'] as String,
             Map<String, dynamic>.from(event['payload'] as Map),
+            devicePayload,
           );
         }
         if (identityPayload.isNotEmpty) {
@@ -205,6 +214,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
             await _apiService.postDeviceJson(
               '/device/identity/',
               identityPayload,
+              registrationPayload: devicePayload,
             );
             _identitySyncError = null;
           } catch (error) {
@@ -323,9 +333,8 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
 
     final deviceUuid =
         snapshot.deviceId ?? 'flutter-${DateTime.now().millisecondsSinceEpoch}';
-    final serialController = TextEditingController(text: snapshot.serial ?? '');
-    final simControllers = <String, TextEditingController>{};
     final simTargets = <String, Map<String, dynamic>>{};
+    final initialIccids = <String, String>{};
     for (var index = 0; index < snapshot.sims.length; index++) {
       final sim = snapshot.sims[index];
       final simUuid = _simUuid(deviceUuid, sim);
@@ -334,113 +343,17 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
         if (sim['slot'] is num) 'slot': (sim['slot'] as num).toInt(),
         'label': 'ICCID · SIM ${index + 1}',
       };
-      simControllers[simUuid] =
-          TextEditingController(text: sim['iccid']?.toString() ?? '');
+      initialIccids[simUuid] = sim['iccid']?.toString() ?? '';
     }
 
-    final formKey = GlobalKey<FormState>();
-    String? validationMessage;
-    Map<String, dynamic>? updates;
-    try {
-      updates = await showDialog<Map<String, dynamic>>(
-        context: context,
-        builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: const Text('Editar identificadores'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: serialController,
-                        maxLength: 255,
-                        decoration: const InputDecoration(
-                          labelText: 'Número de serie',
-                        ),
-                        validator: (value) => (value?.length ?? 0) > 255
-                            ? 'El número de serie es demasiado largo.'
-                            : null,
-                      ),
-                      if (simControllers.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8),
-                          child: Text(
-                            'No se detectaron SIM. Concede el permiso de teléfono y sincroniza para editar un ICCID.',
-                          ),
-                        ),
-                      for (final entry in simControllers.entries)
-                        TextFormField(
-                          controller: entry.value,
-                          maxLength: 255,
-                          decoration: InputDecoration(
-                            labelText:
-                                simTargets[entry.key]!['label'] as String,
-                          ),
-                          validator: (value) => (value?.length ?? 0) > 255
-                              ? 'El ICCID es demasiado largo.'
-                              : null,
-                        ),
-                      if (validationMessage != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            validationMessage!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (!(formKey.currentState?.validate() ?? false)) return;
-                  final serial = serialController.text.trim();
-                  final sims = <Map<String, dynamic>>[];
-                  for (final entry in simControllers.entries) {
-                    final iccid = entry.value.text.trim();
-                    if (iccid.isEmpty) continue;
-                    sims.add({
-                      ...simTargets[entry.key]!,
-                      'iccid': iccid,
-                    }..remove('label'));
-                  }
-                  if (serial.isEmpty && sims.isEmpty) {
-                    setDialogState(() {
-                      validationMessage =
-                          'Escribe un número de serie o al menos un ICCID.';
-                    });
-                    return;
-                  }
-                  Navigator.of(dialogContext).pop({
-                    'serial': serial,
-                    'sims': sims,
-                  });
-                },
-                child: const Text('Guardar'),
-              ),
-            ],
-          ),
-        ),
-      );
-    } finally {
-      serialController.dispose();
-      for (final controller in simControllers.values) {
-        controller.dispose();
-      }
-    }
+    final updates = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => EditIdentityDialog(
+        serial: snapshot.serial ?? '',
+        simTargets: simTargets,
+        initialIccids: initialIccids,
+      ),
+    );
     if (updates == null || !mounted) return;
 
     final serial = updates['serial'] as String;
@@ -483,12 +396,21 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   Future<void> _postDeviceEvent(
     String endpoint,
     Map<String, dynamic> payload,
+    Map<String, dynamic> registrationPayload,
   ) async {
     if (endpoint == '/device/sims/status/') {
-      await _apiService.postDeviceJsonIfAvailable(endpoint, payload);
+      await _apiService.postDeviceJsonIfAvailable(
+        endpoint,
+        payload,
+        registrationPayload: registrationPayload,
+      );
       return;
     }
-    await _apiService.postDeviceJson(endpoint, payload);
+    await _apiService.postDeviceJson(
+      endpoint,
+      payload,
+      registrationPayload: registrationPayload,
+    );
   }
 
   Future<void> _requestDevicePermissions() async {
