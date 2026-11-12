@@ -205,11 +205,13 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
               identityPayload,
             );
             _identitySyncError = null;
-          } on ApiException catch (error) {
-            if (error.statusCode >= 500) rethrow;
-            _identitySyncError =
-                'El servidor rechazó la edición (HTTP ${error.statusCode}). '
-                'Verifica que la SIM siga asignada a este equipo y que el ICCID no esté duplicado.';
+          } catch (error) {
+            debugPrint(
+                'No se pudieron sincronizar los identificadores: $error');
+            _identitySyncError = error is ApiException
+                ? 'El servidor rechazó la edición (HTTP ${error.statusCode}). '
+                    'Verifica que la SIM siga asignada a este equipo y que el ICCID no esté duplicado.'
+                : 'No se pudieron enviar los identificadores; se volverán a intentar en la próxima sincronización.';
           }
         }
       });

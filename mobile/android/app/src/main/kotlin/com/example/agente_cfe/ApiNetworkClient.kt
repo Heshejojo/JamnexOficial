@@ -98,6 +98,11 @@ class ApiNetworkClient(context: Context) {
 			payload: JSONObject,
 			token: String?,
 		): Pair<Int, String> {
+			val baseUrls = if (baseUrl.trimEnd('/') == DEFAULT_API_BASE_URL) {
+				listOf(baseUrl, INTERNAL_API_BASE_URL)
+			} else {
+				listOf(baseUrl)
+			}
 			val networks = listOfNotNull(
 				cellular?.network?.get()?.let { "celular" to it },
 				wifi?.network?.get()?.let { "Wi-Fi" to it },
@@ -108,12 +113,24 @@ class ApiNetworkClient(context: Context) {
 
 			var lastError: IOException? = null
 			for ((label, network) in networks) {
-				try {
-					Log.i(TAG, "Enviando $endpoint por $label")
-					return postOnNetwork(network, baseUrl, endpoint, payload, token)
-				} catch (error: IOException) {
-					Log.w(TAG, "Falló $endpoint por $label; se probará la siguiente red", error)
-					lastError = error
+				for (candidateBaseUrl in baseUrls) {
+					try {
+						Log.i(TAG, "Enviando $endpoint por $label a $candidateBaseUrl")
+						return postOnNetwork(
+							network,
+							candidateBaseUrl,
+							endpoint,
+							payload,
+							token,
+						)
+					} catch (error: IOException) {
+						Log.w(
+							TAG,
+							"Falló $endpoint por $label en $candidateBaseUrl: ${error.message}",
+							error,
+						)
+						lastError = error
+					}
 				}
 			}
 			throw lastError ?: IOException("No se pudo enviar la solicitud a la API.")
@@ -171,6 +188,8 @@ class ApiNetworkClient(context: Context) {
 
 	private companion object {
 		const val TAG = "JamnexApiNetwork"
+		const val DEFAULT_API_BASE_URL = "https://jamnex-api.cfe.mx/api"
+		const val INTERNAL_API_BASE_URL = "https://10.14.64.15/api"
 		const val NETWORK_REQUEST_TIMEOUT_MS = 20_000
 		const val CONNECT_TIMEOUT_MS = 8_000
 		const val READ_TIMEOUT_MS = 20_000
