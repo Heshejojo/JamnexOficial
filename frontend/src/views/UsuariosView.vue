@@ -2,12 +2,12 @@
   <div class="crud-page">
     <header class="page-header"><div><p class="eyebrow">Administración de acceso</p><h2>Usuarios</h2><p class="page-caption">Gestiona cuentas, permisos y acceso al panel de control.</p></div><div class="topbar-actions"><span class="sync-state" :class="{ syncing: loading, failed: loadError }"><i></i>{{ loadError ? 'Sin conexión' : loading ? 'Sincronizando' : `Actualizado ${lastSync}` }}</span><button class="primary-btn" :disabled="loading" @click="load">Actualizar</button></div></header>
     <div class="grid-layout">
-      <section class="panel user-form-panel">
+      <section v-if="!auth.isReadOnly" class="panel user-form-panel">
         <div class="panel-heading">
           <span class="panel-icon">＋</span>
           <div>
-            <h3>{{ editing ? 'Editar administrador' : 'Agregar administrador' }}</h3>
-            <p class="panel-intro">Define qué módulos puede consultar cada cuenta.</p>
+            <h3>{{ editing ? 'Editar usuario' : 'Agregar usuario' }}</h3>
+            <p class="panel-intro">Define el rol y qué módulos puede consultar cada cuenta.</p>
           </div>
         </div>
         <form @submit.prevent="save">
@@ -18,7 +18,12 @@
             <input v-model="form.last_name" placeholder="Apellidos" />
           </div>
           <input v-model="form.password" type="password" placeholder="Contraseña (opcional al editar)" />
-          <div class="role-lock"><span>Rol asignado</span><strong>Administrador</strong></div>
+          <label class="role-lock">
+            <span>Rol asignado</span>
+            <select v-model="form.rol_id" required>
+              <option v-for="role in assignableRoles" :key="role.id" :value="role.id">{{ roleLabel(role.nombre) }}</option>
+            </select>
+          </label>
           <div class="permissions">
             <span class="field-label">Permisos de acceso</span>
             <label v-for="permission in permissionOptions" :key="permission.key">
@@ -31,7 +36,7 @@
           </select>
           <p v-if="saveError" class="save-error">{{ saveError }}</p>
           <div class="actions-row">
-            <button class="primary-btn" :disabled="loading">{{ editing ? 'Actualizar' : 'Guardar administrador' }}</button>
+            <button class="primary-btn" :disabled="loading">{{ editing ? 'Actualizar' : 'Guardar usuario' }}</button>
             <button v-if="editing" class="secondary-btn" type="button" @click="reset">Cancelar</button>
           </div>
         </form>
@@ -40,7 +45,7 @@
         <div class="panel-heading">
           <span class="panel-icon">♙</span>
           <div>
-            <h3>Administradores</h3>
+            <h3>Usuarios</h3>
             <p class="panel-intro">{{ filtered.length }} cuentas registradas</p>
           </div>
           <span class="user-count">{{ filtered.length }}</span>
@@ -51,13 +56,13 @@
             <div class="user-avatar">{{ (item.first_name || item.username || 'U').slice(0, 1).toUpperCase() }}</div>
             <div class="user-row-info">
               <strong>{{ item.email || item.username }}</strong>
-              <small>{{ item.first_name }} {{ item.last_name }} · {{ item.rol?.nombre || 'Administrador' }}</small>
+              <small>{{ item.first_name }} {{ item.last_name }} · {{ roleLabel(item.rol?.nombre) }}</small>
               <div class="permission-list">
                 <span v-for="permission in visiblePermissions(item)" :key="permission.key">{{ permission.label }}</span>
               </div>
             </div>
             <span class="user-status" :class="item.activo ? 'active' : 'inactive'">● {{ item.activo ? 'Activo' : 'Inactivo' }}</span>
-            <div class="row-actions">
+            <div v-if="!auth.isReadOnly" class="row-actions">
               <button class="edit-btn" title="Editar usuario" @click="edit(item)">✎</button>
               <button class="delete-btn" title="Eliminar usuario" @click="remove(item)">×</button>
             </div>
@@ -90,12 +95,16 @@ const form = reactive({
   password: '',
   rol_id: null,
   activo: true,
-  permisos: { dashboard: true, dispositivos: true, sims: true, usuarios: true },
+  permisos: { dashboard: true, dispositivos: true, sims: true, usuarios: true, zonas: true },
 });
+const assignableRoles = computed(() => roles.value.filter((role) =>
+  role.activo && ['ADMIN', 'CONSULTA'].includes(role.nombre.toUpperCase())
+));
 const permissionOptions = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'dispositivos', label: 'Dispositivos' },
   { key: 'sims', label: 'SIMs' },
+  { key: 'zonas', label: 'Zonas' },
   { key: 'usuarios', label: 'Usuarios' },
 ];
 const filtered = computed(() => items.value.filter((item) =>
@@ -133,9 +142,9 @@ function reset() {
     first_name: '',
     last_name: '',
     password: '',
-    rol_id: roles.value.find((role) => role.nombre.toUpperCase() === 'ADMIN')?.id || null,
+    rol_id: roleId('ADMIN'),
     activo: true,
-    permisos: { dashboard: true, dispositivos: true, sims: true, usuarios: true },
+    permisos: { dashboard: true, dispositivos: true, sims: true, usuarios: true, zonas: true },
   });
   editing.value = false;
   editingId.value = null;
@@ -152,13 +161,14 @@ function edit(item) {
     first_name: item.first_name || '',
     last_name: item.last_name || '',
     password: '',
-    rol_id: item.rol?.id || null,
+    rol_id: item.rol?.id || roleId('ADMIN'),
     activo: item.activo,
     permisos: {
       dashboard: false,
       dispositivos: false,
       sims: false,
       usuarios: false,
+      zonas: false,
       ...(item.permisos || {}),
     },
   });
@@ -166,6 +176,17 @@ function edit(item) {
 
 function visiblePermissions(item) {
   return permissionOptions.filter((permission) => item.permisos?.[permission.key] === true);
+}
+
+function roleId(name) {
+  return roles.value.find((role) => role.nombre.toUpperCase() === name)?.id || null;
+}
+
+function roleLabel(name) {
+  const normalized = name?.toUpperCase();
+  if (normalized === 'CONSULTA') return 'Consulta (solo lectura)';
+  if (normalized === 'ADMIN') return 'Administrador';
+  return name || 'Administrador';
 }
 
 async function save() {
@@ -182,6 +203,7 @@ async function save() {
       first_name: form.first_name,
       last_name: form.last_name,
       activo: form.activo,
+      rol_id: form.rol_id,
       permisos: { ...form.permisos },
     };
     if (form.password) payload.password = form.password;

@@ -8,6 +8,7 @@ def default_permisos():
         'dispositivos': True,
         'sims': True,
         'usuarios': True,
+        'zonas': True,
     }
 
 

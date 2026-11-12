@@ -23,6 +23,7 @@
           <span>La SIM {{ conflict.iccid || conflict.numero_telefonico || '' }} cambió de <b>{{ conflict.source_device_name }}</b> a <b>{{ conflict.target_device_name }}</b>.</span>
         </div>
         <button
+          v-if="!auth.isReadOnly"
           class="transfer-alert-close"
           type="button"
           aria-label="Cerrar aviso"
@@ -81,10 +82,10 @@
               {{ statusLabel(sim) }}
               </span>
               <button class="detail-btn" title="Ver detalles" aria-label="Ver detalles" @click="selectDetail(sim)">Ver detalles</button>
-              <button class="secondary-btn small-btn" type="button" @click="toggleSimStatus(sim)">
+              <button v-if="!auth.isReadOnly" class="secondary-btn small-btn" type="button" @click="toggleSimStatus(sim)">
                 {{ sim.activo ? 'Dar de baja' : 'Reactivar' }}
               </button>
-              <button class="delete-btn" title="Eliminar definitivamente" aria-label="Eliminar la SIM" @click="hardDeleteSim(sim)">Eliminar</button>
+              <button v-if="!auth.isReadOnly" class="delete-btn" title="Eliminar definitivamente" aria-label="Eliminar la SIM" @click="hardDeleteSim(sim)">Eliminar</button>
             </div>
           </div>
         </div>
@@ -105,7 +106,7 @@
               <span class="live-status" :class="statusClass(selectedSim)">
                 {{ statusLabel(selectedSim, true) }}
               </span>
-              <button class="secondary-btn" type="button" @click="startEdit">✎ Editar</button>
+              <button v-if="!auth.isReadOnly" class="secondary-btn" type="button" @click="startEdit">✎ Editar</button>
               <button class="secondary-btn" type="button" @click="selectedSim = null">Cerrar</button>
             </div>
           </div>
@@ -200,7 +201,7 @@
       </aside>
     </div>
 
-    <div v-if="editingSim" class="modal-backdrop" @click.self="editingSim = false">
+    <div v-if="editingSim && !auth.isReadOnly" class="modal-backdrop" @click.self="editingSim = false">
       <form class="edit-modal" @submit.prevent="saveEdit">
         <div class="modal-heading">
           <div><p class="eyebrow">Editar línea</p><h3>{{ editForm.numero_telefonico || 'SIM seleccionada' }}</h3></div>
@@ -220,7 +221,9 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import api from '../services/api';
+import { useAuthStore } from '../stores/auth';
 
+const auth = useAuthStore();
 const sims = ref([]);
 const selectedSim = ref(null);
 const query = ref('');
@@ -430,6 +433,8 @@ async function loadSims() {
 }
 
 async function acknowledgeTransfer(conflict) {
+  if (auth.isReadOnly) return;
+
   transferringConflictIds.value = [...transferringConflictIds.value, conflict.id];
   try {
     await api.post(`/sims/conflicts/${conflict.id}/acknowledge/`);
@@ -602,7 +607,7 @@ async function exportDevicesReport() {
 }
 
 function startEdit() {
-  if (!selectedSim.value) return;
+  if (auth.isReadOnly || !selectedSim.value) return;
   Object.assign(editForm, {
     numero_telefonico: selectedSim.value.numero_telefonico || '',
     iccid: selectedSim.value.iccid || '',
@@ -611,7 +616,7 @@ function startEdit() {
 }
 
 async function saveEdit() {
-  if (!selectedSim.value) return;
+  if (auth.isReadOnly || !selectedSim.value) return;
   savingEdit.value = true;
   try {
     await api.patch(`/sims/${selectedSim.value.id}/`, {
@@ -637,6 +642,8 @@ function formatDate(dateString) {
 }
 
 async function toggleSimStatus(sim) {
+  if (auth.isReadOnly) return;
+
   const nombre = sim.numero_telefonico || sim.iccid || 'esta SIM';
   const activar = !sim.activo;
   const confirmar = window.confirm(
@@ -660,6 +667,8 @@ async function toggleSimStatus(sim) {
 }
 
 async function hardDeleteSim(sim) {
+  if (auth.isReadOnly) return;
+
   const nombre = sim.numero_telefonico || sim.iccid || 'esta SIM';
   const confirmar = window.confirm(
     `¿Eliminar definitivamente ${nombre}?\n\nEsta acción borra la SIM y su historial asociado. No se puede deshacer.`

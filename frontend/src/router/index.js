@@ -30,7 +30,7 @@ const routes = [
     path: '/zonas',
     name: 'zonas',
     component: () => import('../views/ZonasView.vue'),
-    meta: { requiresAuth: true, permiso: 'usuarios' },
+    meta: { requiresAuth: true, permiso: 'zonas' },
   },
   {
     path: '/sin-acceso',
@@ -64,6 +64,7 @@ router.beforeEach(async (to) => {
     { permiso: 'dashboard', path: '/' },
     { permiso: 'dispositivos', path: '/dispositivos' },
     { permiso: 'sims', path: '/sims' },
+    { permiso: 'zonas', path: '/zonas' },
     { permiso: 'usuarios', path: '/usuarios' },
   ];
   const fallback = allowedRoutes.find(({ permiso }) => auth.user.permisos?.[permiso] === true);

@@ -14,6 +14,11 @@ que comienzan con `/device/` usan la credencial propia del dispositivo.
 | GET/POST | `/api/usuarios/` | Administra usuarios. |
 | GET/POST | `/api/roles/` | Administra roles. |
 
+Los permisos por módulo se asignan en `permisos`; la clave `zonas` controla
+el acceso a Zonas y a `/api/areas/`. El rol `ADMIN` puede modificar los módulos
+permitidos; `CONSULTA` solo puede consultarlos (GET/HEAD/OPTIONS), también
+respetando los permisos asignados.
+
 Encabezado:
 
 ```http

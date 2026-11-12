@@ -22,7 +22,7 @@
         <router-link v-if="can('sims')" to="/sims" class="nav-item" exact-active-class="active">
           <span aria-hidden="true">▤</span>SIMs
         </router-link>
-        <router-link v-if="can('usuarios')" to="/zonas" class="nav-item" exact-active-class="active">
+        <router-link v-if="can('zonas')" to="/zonas" class="nav-item" exact-active-class="active">
           <span aria-hidden="true">⌖</span>Zonas
         </router-link>
         <router-link v-if="can('usuarios')" to="/usuarios" class="nav-item" exact-active-class="active">
@@ -71,6 +71,7 @@ const permissionRoutes = [
   { key: 'dashboard', path: '/' },
   { key: 'dispositivos', path: '/dispositivos' },
   { key: 'sims', path: '/sims' },
+  { key: 'zonas', path: '/zonas' },
   { key: 'usuarios', path: '/usuarios' },
 ];
 let permissionRefreshTimer;

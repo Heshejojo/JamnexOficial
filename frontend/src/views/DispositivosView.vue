@@ -43,7 +43,7 @@
                 {{ item.en_linea ? '● Activo' : '● Inactivo' }}
               </span>
               <button class="detail-btn" @click="selectDetail(item)">Ver detalles</button>
-              <button class="revoke-btn" @click="deleteDevice(item)">Eliminar</button>
+              <button v-if="!auth.isReadOnly" class="revoke-btn" @click="deleteDevice(item)">Eliminar</button>
             </div>
           </div>
         </div>
@@ -67,7 +67,7 @@
               <span class="live-status" :class="selectedDevice.en_linea ? 'active' : 'inactive'">
                 {{ selectedDevice.en_linea ? 'En línea' : 'Fuera de línea' }}
               </span>
-              <button v-if="selectedDevice" class="secondary-btn" type="button" @click="startEdit">✎ Editar</button>
+              <button v-if="!auth.isReadOnly" class="secondary-btn" type="button" @click="startEdit">✎ Editar</button>
               <button class="secondary-btn" type="button" @click="selectedDevice = null">Cerrar</button>
             </div>
           </div>
@@ -157,7 +157,7 @@
       </aside>
     </div>
 
-    <div v-if="editingDevice" class="modal-backdrop" @click.self="editingDevice = false">
+    <div v-if="editingDevice && !auth.isReadOnly" class="modal-backdrop" @click.self="editingDevice = false">
       <form class="edit-modal" @submit.prevent="saveEdit">
         <div class="modal-heading">
           <div><p class="eyebrow">Editar dispositivo</p><h3>{{ editForm.modelo || editForm.device_uuid || 'Dispositivo' }}</h3></div>
@@ -179,9 +179,11 @@
 <script setup>
 import { computed, onActivated, onBeforeUnmount, onDeactivated, reactive, ref } from 'vue';
 import api from '../services/api';
+import { useAuthStore } from '../stores/auth';
 
 defineOptions({ name: 'DispositivosView' });
 
+const auth = useAuthStore();
 const items = ref([]);
 const selectedDevice = ref(null);
 const query = ref('');
@@ -384,7 +386,7 @@ async function loadData() {
 }
 
 function startEdit() {
-  if (!selectedDevice.value) return;
+  if (auth.isReadOnly || !selectedDevice.value) return;
 
   Object.assign(editForm, {
     serial: selectedDevice.value.serial || '',
@@ -395,7 +397,7 @@ function startEdit() {
 }
 
 async function saveEdit() {
-  if (!selectedDevice.value) return;
+  if (auth.isReadOnly || !selectedDevice.value) return;
 
   savingDeviceEdit.value = true;
   try {
@@ -419,6 +421,8 @@ async function saveEdit() {
 }
 
 async function deleteDevice(item) {
+  if (auth.isReadOnly) return;
+
   const nombre = item.modelo || item.device_uuid || 'este dispositivo';
   const confirmar = window.confirm(`¿Seguro que deseas eliminar ${nombre}?\n\nSe borrarán también sus registros de batería, RAM, almacenamiento, red y consumo. Las SIMs que tuvo se conservan, con su historial.\n\nEsta acción no se puede deshacer.`);
 

@@ -33,11 +33,13 @@ class RolePermission(BasePermission):
             'consumos': 'sims',
             'usuarios': 'usuarios',
             'roles': 'usuarios',
+            'areas': 'zonas',
+            'zonas': 'zonas',
         }.get(section, section)
         permisos = getattr(request.user, 'permisos', None)
         if section == 'dashboard':
             return isinstance(permisos, dict) and permisos.get('dashboard') is True
-        if section in {'dispositivos', 'sims', 'usuarios'}:
+        if section in {'dispositivos', 'sims', 'usuarios', 'zonas'}:
             return isinstance(permisos, dict) and permisos.get(section) is True
         return True
 
@@ -55,6 +57,6 @@ class RolePermission(BasePermission):
             return True
         if role == 'SUPERVISOR':
             return request.method in {'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH'}
-        if role == 'TRABAJADOR':
+        if role in {'CONSULTA', 'TRABAJADOR'}:
             return request.method in {'GET', 'HEAD', 'OPTIONS'}
         return False

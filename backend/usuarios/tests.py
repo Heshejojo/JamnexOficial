@@ -7,7 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from areas.models import Area
 from dispositivos.models import Dispositivo
-from usuarios.models import Usuario
+from usuarios.models import Rol, Usuario
 
 
 class DemoUserPostMigrateTest(TestCase):
@@ -45,6 +45,67 @@ class UsuariosAuthSmokeTest(TestCase):
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
         self.assertEqual(serializer.validated_data['user']['email'], user.email)
+
+
+class ConsultaRolePermissionsTest(TestCase):
+    def setUp(self):
+        role = Rol.objects.get(nombre='CONSULTA')
+        self.user = Usuario.objects.create_user(
+            username='consulta',
+            email='consulta@example.com',
+            password='test-password',
+            rol=role,
+            permisos={
+                'dashboard': False,
+                'dispositivos': False,
+                'sims': False,
+                'usuarios': False,
+                'zonas': True,
+            },
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_can_read_zones_but_cannot_modify_them(self):
+        response = self.client.get('/api/areas/')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post('/api/areas/', {'nombre': 'Nueva zona'}, format='json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_zones_permission_is_required_to_read_areas(self):
+        self.user.permisos['zonas'] = False
+        self.user.save(update_fields=['permisos'])
+
+        response = self.client.get('/api/areas/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_can_assign_consulta_role_with_zones_access(self):
+        admin = Usuario.objects.create_superuser(
+            username='role-admin',
+            email='role-admin@example.com',
+            password='test-password',
+        )
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.post('/api/usuarios/', {
+            'username': 'readonly-user',
+            'email': 'readonly@example.com',
+            'password': 'test-password',
+            'rol_id': self.user.rol_id,
+            'permisos': {
+                'dashboard': False,
+                'dispositivos': False,
+                'sims': False,
+                'usuarios': False,
+                'zonas': True,
+            },
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        created_user = Usuario.objects.get(username='readonly-user')
+        self.assertEqual(created_user.rol.nombre, 'CONSULTA')
+        self.assertTrue(created_user.permisos['zonas'])
 
 
 class TrabajadorCrudApiTest(TestCase):
