@@ -9,6 +9,7 @@ para SIMs, consumo y ejecución en segundo plano.
 - Identificar el equipo mediante Android ID.
 - Leer batería, RAM, almacenamiento y conexión.
 - Detectar SIMs, ICCID, operador y ranura.
+- Solicitar permisos de teléfono y número de línea cuando sean necesarios.
 - Consultar datos móviles con `NetworkStatsManager`.
 - Enviar registros al backend con una credencial de dispositivo.
 - Guardar eventos pendientes cuando falla una petición.

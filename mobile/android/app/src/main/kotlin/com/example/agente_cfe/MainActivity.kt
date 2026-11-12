@@ -40,6 +40,7 @@ class MainActivity : FlutterActivity() {
 	private val apiChannelName = "agente_cfe/api"
 	private val permissionRequestCode = 901
 	private var usageAccessPromptShown = false
+	private var permissionRequestInProgress = false
 	private val apiNetworkSessionLock = Any()
 	private var apiNetworkSession: ApiNetworkClient.Session? = null
 
@@ -68,18 +69,23 @@ class MainActivity : FlutterActivity() {
 		}
 
 		permissions.add(Manifest.permission.READ_PHONE_STATE)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			permissions.add(Manifest.permission.READ_PHONE_NUMBERS)
+		}
 
 		return permissions.filter {
 			ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
 		}.distinct().toTypedArray()
 	}
 
-	private fun requestRequiredPermissionsIfNeeded() {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+	private fun requestRequiredPermissionsIfNeeded(): Boolean {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
 		val missingPermissions = requiredRuntimePermissions()
-		if (missingPermissions.isNotEmpty()) {
+		if (missingPermissions.isNotEmpty() && !permissionRequestInProgress) {
+			permissionRequestInProgress = true
 			ActivityCompat.requestPermissions(this, missingPermissions, permissionRequestCode)
 		}
+		return missingPermissions.isNotEmpty()
 	}
 
 	private fun fallbackPhoneNumber(): String? {
@@ -147,10 +153,9 @@ class MainActivity : FlutterActivity() {
 
 	override fun onCreate(savedInstanceState: android.os.Bundle?) {
 		super.onCreate(savedInstanceState)
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			requestRequiredPermissionsIfNeeded()
+		if (!requestRequiredPermissionsIfNeeded()) {
+			requestUsageAccessIfNeeded()
 		}
-		requestUsageAccessIfNeeded()
 	}
 
 	override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -209,6 +214,14 @@ class MainActivity : FlutterActivity() {
 		}
 
 		MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName).setMethodCallHandler { call, result ->
+			if (call.method == "requestPermissions") {
+				if (!requestRequiredPermissionsIfNeeded()) {
+					requestUsageAccessIfNeeded()
+				}
+				result.success(null)
+				return@setMethodCallHandler
+			}
+
 			if (call.method == "scheduleBackgroundSync") {
 				val baseUrl = call.argument<String>("baseUrl")
 				if (baseUrl.isNullOrBlank()) {
@@ -274,8 +287,9 @@ class MainActivity : FlutterActivity() {
 			}
 
 			if (call.method == "getTelemetry") {
-				requestRequiredPermissionsIfNeeded()
-				requestUsageAccessIfNeeded()
+				if (!requestRequiredPermissionsIfNeeded()) {
+					requestUsageAccessIfNeeded()
+				}
 				Thread {
 					try {
 						result.success(collectTelemetry())
@@ -297,7 +311,7 @@ class MainActivity : FlutterActivity() {
 				emptyArray()
 			}
 			if (missingPermissions.isNotEmpty()) {
-				ActivityCompat.requestPermissions(this, missingPermissions, permissionRequestCode)
+				requestRequiredPermissionsIfNeeded()
 				result.success(mapOf(
 					"readable" to false,
 					"sims" to emptyList<Map<String, Any?>>(),
@@ -360,7 +374,10 @@ class MainActivity : FlutterActivity() {
 	) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 		if (requestCode == permissionRequestCode) {
-			requestUsageAccessIfNeeded()
+			permissionRequestInProgress = false
+			if (requiredRuntimePermissions().isEmpty()) {
+				requestUsageAccessIfNeeded()
+			}
 		}
 	}
 

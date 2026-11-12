@@ -489,6 +489,23 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     await _apiService.postDeviceJson(endpoint, payload);
   }
 
+  Future<void> _requestDevicePermissions() async {
+    try {
+      await _simChannel.invokeMethod<void>('requestPermissions');
+    } on PlatformException catch (error) {
+      debugPrint('No se pudieron solicitar permisos del dispositivo: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No fue posible abrir la solicitud de permisos.'),
+          ),
+        );
+      }
+    } on MissingPluginException catch (error) {
+      debugPrint('El canal Android de permisos no está disponible: $error');
+    }
+  }
+
   String _networkType(String? connectionType) {
     switch (connectionType) {
       case 'Wi‑Fi':
@@ -567,6 +584,17 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
               _MobileDataHero(snapshot: _snapshot),
               const SizedBox(height: 20),
               _MonitoringPanel(snapshot: _snapshot),
+              if (_snapshot?.simsReadable != true) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _requestDevicePermissions,
+                    icon: const Icon(Icons.security_rounded),
+                    label: const Text('Solicitar permisos de SIM'),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(18),
