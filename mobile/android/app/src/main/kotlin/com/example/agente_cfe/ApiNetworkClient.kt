@@ -1,6 +1,7 @@
 package com.example.agente_cfe
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -9,13 +10,15 @@ import android.util.Log
 import org.json.JSONObject
 import java.io.Closeable
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
-import javax.net.ssl.HttpsURLConnection
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 class ApiNetworkClient(context: Context) {
+	private val isDebugBuild =
+		(context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 	private val connectivityManager =
 		context.getSystemService(ConnectivityManager::class.java)
 			?: error("ConnectivityManager no disponible")
@@ -99,7 +102,11 @@ class ApiNetworkClient(context: Context) {
 			token: String?,
 		): Pair<Int, String> {
 			val baseUrls = if (baseUrl.trimEnd('/') == DEFAULT_API_BASE_URL) {
-				listOf(baseUrl, INTERNAL_API_BASE_URL)
+				listOfNotNull(
+					baseUrl,
+					INTERNAL_API_BASE_URL,
+					INTERNAL_HTTP_API_BASE_URL.takeIf { isDebugBuild },
+				)
 			} else {
 				listOf(baseUrl)
 			}
@@ -112,8 +119,13 @@ class ApiNetworkClient(context: Context) {
 			}
 
 			var lastError: IOException? = null
-			for ((label, network) in networks) {
-				for (candidateBaseUrl in baseUrls) {
+			for (candidateBaseUrl in baseUrls) {
+				val candidateNetworks = if (candidateBaseUrl == INTERNAL_HTTP_API_BASE_URL) {
+					networks.sortedBy { if (it.first == "Wi-Fi") 0 else 1 }
+				} else {
+					networks
+				}
+				for ((label, network) in candidateNetworks) {
 					try {
 						Log.i(TAG, "Enviando $endpoint por $label a $candidateBaseUrl")
 						return postOnNetwork(
@@ -150,10 +162,17 @@ class ApiNetworkClient(context: Context) {
 		token: String?,
 	): Pair<Int, String> {
 		val url = URL("$baseUrl$endpoint")
-		require(url.protocol.equals("https", ignoreCase = true)) {
-			"Solo se permiten conexiones HTTPS a la API."
+		val isDebugInternalHttp = isDebugBuild &&
+			url.protocol.equals("http", ignoreCase = true) &&
+			url.host == INTERNAL_API_HOST &&
+			url.port == INTERNAL_API_PORT
+		require(url.protocol.equals("https", ignoreCase = true) || isDebugInternalHttp) {
+			"Solo se permiten conexiones HTTPS, excepto HTTP interno en compilaciones debug."
 		}
-		val connection = network.openConnection(url) as HttpsURLConnection
+		if (isDebugInternalHttp) {
+			Log.w(TAG, "Usando HTTP sin cifrar para la API interna en una compilación debug.")
+		}
+		val connection = network.openConnection(url) as HttpURLConnection
 		try {
 			connection.requestMethod = "POST"
 			connection.connectTimeout = CONNECT_TIMEOUT_MS
@@ -190,6 +209,9 @@ class ApiNetworkClient(context: Context) {
 		const val TAG = "JamnexApiNetwork"
 		const val DEFAULT_API_BASE_URL = "https://jamnex-api.cfe.mx/api"
 		const val INTERNAL_API_BASE_URL = "https://10.14.64.15/api"
+		const val INTERNAL_HTTP_API_BASE_URL = "http://10.14.64.15:8000/api"
+		const val INTERNAL_API_HOST = "10.14.64.15"
+		const val INTERNAL_API_PORT = 8000
 		const val NETWORK_REQUEST_TIMEOUT_MS = 20_000
 		const val CONNECT_TIMEOUT_MS = 8_000
 		const val READ_TIMEOUT_MS = 20_000

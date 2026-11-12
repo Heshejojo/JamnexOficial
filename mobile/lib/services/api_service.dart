@@ -51,6 +51,12 @@ class ApiService {
     return token;
   }
 
+  Future<String> ensureDeviceRegistered(Map<String, dynamic> payload) async {
+    final token = _deviceToken;
+    if (token != null && token.isNotEmpty) return token;
+    return registerDevice(payload);
+  }
+
   Future<Map<String, dynamic>> postDeviceJson(
       String endpoint, Map<String, dynamic> payload) {
     if (_deviceToken == null) {

@@ -81,6 +81,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   }
 
   Future<void> _collectAndSend() async {
+    if (_isLoading) return;
     final pendingEvents = <Map<String, dynamic>>[];
     if (mounted) {
       setState(() {
@@ -90,6 +91,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     }
 
     try {
+      await _apiService.loadDeviceToken();
       final collectedSnapshot = await _deviceService.collectDeviceSnapshot();
       var snapshot = collectedSnapshot;
       final deviceUuid = snapshot.deviceId ??
@@ -185,7 +187,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
         });
       }
       await _apiService.withNetworkSession(() async {
-        await _apiService.registerDevice(devicePayload);
+        await _apiService.ensureDeviceRegistered(devicePayload);
         await _syncProvider.retry((item) async {
           final payload =
               Map<String, dynamic>.from(item['payload'] as Map? ?? {});

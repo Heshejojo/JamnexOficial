@@ -7,6 +7,12 @@
     </base-config>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="false">jamnex-api.cfe.mx</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/cfe_ca" />
+        </trust-anchors>
+    </domain-config>
+    <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">10.14.64.15</domain>
         <trust-anchors>
             <certificates src="system" />

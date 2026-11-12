@@ -53,5 +53,9 @@ El certificado incluido actualmente es un placeholder de prueba; reemplázalo
 con la CA pública correcta antes de producción. Nunca copies una llave privada
 de CA al proyecto ni a la APK.
 
+Las compilaciones Android `debug` pueden usar como último recurso HTTP hacia
+`10.14.64.15:8000` para pruebas en la red interna. Las compilaciones `release`
+no permiten ese fallback y requieren HTTPS.
+
 Consulta [`../docs/operations.md`](../docs/operations.md) para permisos,
 diagnóstico de WorkManager e instalación en un dispositivo.
