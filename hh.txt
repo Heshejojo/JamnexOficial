@@ -1,11 +1,33 @@
-SELECT table_name, column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name IN (
-    'areas',
-    'areas_procesos_zona',
-    'procesos',
-    'procesos_zona',
-    'subprocesos'
-  )
-ORDER BY table_name, ordinal_position;
+Esquema |                Nombre                 | Tipo  |  Dueño   
+---------+---------------------------------------+-------+----------
+ public  | almacenamiento_registroalmacenamiento | tabla | postgres
+ public  | areas_area                            | tabla | postgres
+ public  | auditoria_auditoria                   | tabla | postgres
+ public  | auth_group                            | tabla | postgres
+ public  | auth_group_permissions                | tabla | postgres
+ public  | auth_permission                       | tabla | postgres
+ public  | bateria_registrobateria               | tabla | postgres
+ public  | consumos_consumo                      | tabla | postgres
+ public  | consumos_consumosyncstate             | tabla | postgres
+ public  | dispositivos_asignaciondispositivo    | tabla | postgres
+ public  | dispositivos_credencialdispositivo    | tabla | postgres
+public  | dispositivos_dispositivo              | tabla | postgres
+ public  | django_admin_log                      | tabla | postgres
+ public  | django_content_type                   | tabla | postgres
+ public  | django_migrations                     | tabla | postgres
+ public  | django_session                        | tabla | postgres
+ public  | operadores_operador                   | tabla | postgres
+ public  | ram_registroram                       | tabla | postgres
+ public  | redes_registrored                     | tabla | postgres
+ public  | sims_asignacionsim                    | tabla | postgres
+ public  | sims_historialsim                     | tabla | postgres
+ public  | sims_sim                              | tabla | postgres
+ public  | sims_simtransferconflict              | tabla | postgres
+ public  | token_blacklist_blacklistedtoken      | tabla | postgres
+ public  | token_blacklist_outstandingtoken      | tabla | postgres
+ public  | trabajadores_trabajador               | tabla | postgres
+ public  | usuarios_rol                          | tabla | postgres
+ public  | usuarios_usuario                      | tabla | postgres
+ public  | usuarios_usuario_groups               | tabla | postgres
+ public  | usuarios_usuario_user_permissions     | tabla | postgres
+(30 filas)
