@@ -27,6 +27,12 @@ const routes = [
     meta: { requiresAuth: true, permiso: 'usuarios' },
   },
   {
+    path: '/zonas',
+    name: 'zonas',
+    component: () => import('../views/ZonasView.vue'),
+    meta: { requiresAuth: true, permiso: 'usuarios' },
+  },
+  {
     path: '/sin-acceso',
     name: 'sin-acceso',
     component: () => import('../views/NoAccessView.vue'),
