@@ -22,11 +22,11 @@
         <router-link v-if="can('sims')" to="/sims" class="nav-item" exact-active-class="active">
           <span aria-hidden="true">▤</span>SIMs
         </router-link>
-        <router-link v-if="can('usuarios')" to="/usuarios" class="nav-item" exact-active-class="active">
-          <span aria-hidden="true">♙</span>Usuarios
-        </router-link>
         <router-link v-if="can('usuarios')" to="/zonas" class="nav-item" exact-active-class="active">
           <span aria-hidden="true">⌖</span>Zonas
+        </router-link>
+        <router-link v-if="can('usuarios')" to="/usuarios" class="nav-item" exact-active-class="active">
+          <span aria-hidden="true">♙</span>Usuarios
         </router-link>
       </nav>
 
