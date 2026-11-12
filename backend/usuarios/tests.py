@@ -90,6 +90,22 @@ class ConsultaRolePermissionsTest(TestCase):
         response = self.client.get('/api/areas/')
         self.assertEqual(response.status_code, 403)
 
+    def test_consulta_role_remains_read_only_for_superusers(self):
+        admin = Usuario.objects.create_superuser(
+            username='readonly-superuser',
+            email='readonly-superuser@example.com',
+            password='test-password',
+        )
+        admin.rol = self.user.rol
+        admin.save(update_fields=['rol'])
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.get('/api/areas/')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post('/api/areas/', {'nombre': 'No editable'}, format='json')
+        self.assertEqual(response.status_code, 403)
+
     def test_admin_can_assign_consulta_role_with_zones_access(self):
         admin = Usuario.objects.create_superuser(
             username='role-admin',

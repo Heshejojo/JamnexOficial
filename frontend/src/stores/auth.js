@@ -8,8 +8,9 @@ export const useAuthStore = defineStore('auth', {
     loading: false,
   }),
   getters: {
-    isReadOnly: (state) => !state.user?.is_superuser
-      && ['CONSULTA', 'TRABAJADOR'].includes(state.user?.rol?.nombre?.toUpperCase()),
+    isReadOnly: (state) => ['CONSULTA', 'TRABAJADOR'].includes(
+      state.user?.rol?.nombre?.toUpperCase()
+    ),
   },
   actions: {
     setAuth(data) {

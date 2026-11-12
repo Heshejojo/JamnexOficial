@@ -8,10 +8,10 @@ class DashboardPermission(BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if getattr(user, 'is_superuser', False):
-            return True
         role = getattr(getattr(user, 'rol', None), 'nombre', '').upper()
         if role == 'CONSULTA':
+            return True
+        if getattr(user, 'is_superuser', False):
             return True
         permisos = getattr(user, 'permisos', None)
         return isinstance(permisos, dict) and permisos.get('dashboard') is True
@@ -54,12 +54,14 @@ class RolePermission(BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
+        role = getattr(getattr(user, 'rol', None), 'nombre', '').upper()
+        if role == 'CONSULTA':
+            return request.method in {'GET', 'HEAD', 'OPTIONS'}
         if getattr(user, 'is_superuser', False):
             return True
         if not self.has_module_permission(request):
             return False
 
-        role = getattr(getattr(user, 'rol', None), 'nombre', '').upper()
         if role == 'ADMIN':
             return True
         if role == 'SUPERVISOR':
