@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     DeviceConsumptionView,
+    DeviceIdentityView,
     DeviceNetworkView,
     DeviceRegisterView,
     DeviceRevokeView,
@@ -15,6 +16,7 @@ from .views import (
 urlpatterns = [
     path('device/register/', DeviceRegisterView.as_view(), name='device-register'),
     path('device/status/', DeviceStatusView.as_view(), name='device-status'),
+    path('device/identity/', DeviceIdentityView.as_view(), name='device-identity'),
     path('device/consumption/', DeviceConsumptionView.as_view(), name='device-consumption'),
     path('device/network/', DeviceNetworkView.as_view(), name='device-network'),
     path('device/sim/', DeviceSimView.as_view(), name='device-sim'),

@@ -120,6 +120,125 @@ class DeviceRegisterManualFieldsTest(TestCase):
         )
 
 
+class DeviceIdentityApiTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        registration = self.client.post(
+            '/api/device/register/',
+            {'device_uuid': 'identity-device'},
+            format='json',
+        )
+        self.device = Dispositivo.objects.get(pk=registration.data['device_id'])
+        self.headers = {
+            'HTTP_AUTHORIZATION': f"Device {registration.data['token']}",
+        }
+        self.sim = Sim.objects.create(
+            dispositivo=self.device,
+            sim_uuid='identity-sim',
+            slot=0,
+            iccid='8952020320430379646',
+        )
+
+    def test_device_can_update_its_serial_and_sim_iccid(self):
+        response = self.client.post(
+            '/api/device/identity/',
+            {
+                'serial': 'SERIAL-EDITED-IN-APP',
+                'sims': [{
+                    'sim_uuid': self.sim.sim_uuid,
+                    'slot': self.sim.slot,
+                    'iccid': '8952020320430379653',
+                }],
+            },
+            format='json',
+            **self.headers,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.device.refresh_from_db()
+        self.sim.refresh_from_db()
+        self.assertEqual(self.device.serial, 'SERIAL-EDITED-IN-APP')
+        self.assertEqual(self.sim.iccid, '8952020320430379653')
+        self.assertEqual(self.sim.iccid_normalized, '8952020320430379653')
+
+        self.client.post(
+            '/api/device/sim/',
+            {
+                'sim_uuid': self.sim.sim_uuid,
+                'slot': self.sim.slot,
+                'iccid': '8952020320430379646',
+            },
+            format='json',
+            **self.headers,
+        )
+        self.sim.refresh_from_db()
+        self.assertEqual(self.sim.iccid, '8952020320430379653')
+
+    def test_device_cannot_update_another_devices_sim(self):
+        other_device = Dispositivo.objects.create(device_uuid='other-identity-device')
+        other_sim = Sim.objects.create(
+            dispositivo=other_device,
+            sim_uuid='other-identity-sim',
+            slot=0,
+            iccid='8952020320430379661',
+        )
+
+        response = self.client.post(
+            '/api/device/identity/',
+            {
+                'sims': [{
+                    'sim_uuid': other_sim.sim_uuid,
+                    'slot': other_sim.slot,
+                    'iccid': '8952020320430379679',
+                }],
+            },
+            format='json',
+            **self.headers,
+        )
+
+        self.assertEqual(response.status_code, 404)
+        other_sim.refresh_from_db()
+        self.assertEqual(other_sim.iccid, '8952020320430379661')
+
+    def test_device_identity_requires_its_device_token(self):
+        response = self.client.post(
+            '/api/device/identity/',
+            {'serial': 'SERIAL-EDITED-IN-APP'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_device_identity_rejects_an_iccid_assigned_to_another_sim(self):
+        other_device = Dispositivo.objects.create(device_uuid='duplicate-identity-device')
+        other_sim = Sim.objects.create(
+            dispositivo=other_device,
+            sim_uuid='duplicate-identity-sim',
+            slot=0,
+            iccid='8952020320430379661',
+        )
+
+        response = self.client.post(
+            '/api/device/identity/',
+            {
+                'serial': 'SERIAL-SHOULD-ROLL-BACK',
+                'sims': [{
+                    'sim_uuid': self.sim.sim_uuid,
+                    'slot': self.sim.slot,
+                    'iccid': other_sim.iccid,
+                }],
+            },
+            format='json',
+            **self.headers,
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.device.refresh_from_db()
+        self.sim.refresh_from_db()
+        self.assertFalse(self.device.serial)
+        self.assertEqual(self.sim.iccid, '8952020320430379646')
+
+
 class DeviceConsumptionMobileOnlyTest(TestCase):
     def setUp(self):
         self.client = APIClient()

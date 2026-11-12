@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models/device_snapshot.dart';
 import 'services/api_service.dart';
@@ -46,7 +49,10 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   bool _isLoading = false;
   String _status = 'Pendiente';
   String _lastSync = 'Nunca';
+  String? _identitySyncError;
   DeviceSnapshot? _snapshot;
+  String? _serialOverride;
+  final Map<String, Map<String, dynamic>> _iccidOverrides = {};
 
   @override
   void initState() {
@@ -59,6 +65,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
       _apiService.loadDeviceToken(),
       _syncProvider.load(),
     ]);
+    await _loadIdentityOverrides();
 
     try {
       await _simChannel.invokeMethod<void>(
@@ -83,15 +90,17 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     }
 
     try {
-      final snapshot = await _deviceService.collectDeviceSnapshot();
+      final collectedSnapshot = await _deviceService.collectDeviceSnapshot();
+      var snapshot = collectedSnapshot;
+      final deviceUuid = snapshot.deviceId ??
+          'flutter-${DateTime.now().millisecondsSinceEpoch}';
+      snapshot = _applyIdentityOverrides(snapshot, deviceUuid);
       if (mounted) {
         setState(() {
           _snapshot = snapshot;
         });
       }
 
-      final deviceUuid = snapshot.deviceId ??
-          'flutter-${DateTime.now().millisecondsSinceEpoch}';
       final devicePayload = snapshot.toBackendPayload()
         ..['device_uuid'] = deviceUuid;
       final statusPayload = <String, dynamic>{
@@ -116,13 +125,14 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           'tipo_conexion': _networkType(snapshot.connectionType),
         },
       });
-      for (final sim in snapshot.sims) {
+      for (var index = 0; index < snapshot.sims.length; index++) {
+        final sim = snapshot.sims[index];
+        final reportedSim = collectedSnapshot.sims[index];
         pendingEvents.add({
           'endpoint': '/device/sim/',
           'payload': {
-            'sim_uuid': sim['subscription_id']?.toString() ??
-                'sim-${deviceUuid}-${sim['slot'] ?? 0}',
-            'iccid': sim['iccid'],
+            'sim_uuid': _simUuid(deviceUuid, sim),
+            'iccid': reportedSim['iccid'],
             'slot': sim['slot'],
             'operador_nombre': sim['operador'],
             'pais': sim['pais'],
@@ -136,6 +146,21 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           },
         });
       }
+      final currentSimIds =
+          snapshot.sims.map((sim) => _simUuid(deviceUuid, sim)).toSet();
+      final identitySims = _iccidOverrides.entries
+          .where((entry) => currentSimIds.contains(entry.key))
+          .map((entry) => <String, dynamic>{
+                'sim_uuid': entry.value['sim_uuid'],
+                if (entry.value['slot'] is int && entry.value['slot'] >= 0)
+                  'slot': entry.value['slot'],
+                'iccid': entry.value['iccid'],
+              })
+          .toList();
+      final identityPayload = <String, dynamic>{
+        if (_serialOverride != null) 'serial': _serialOverride,
+        if (identitySims.isNotEmpty) 'sims': identitySims,
+      };
       if (snapshot.simsReadable == true) {
         pendingEvents.add({
           'endpoint': '/device/sims/status/',
@@ -173,14 +198,35 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
             Map<String, dynamic>.from(event['payload'] as Map),
           );
         }
+        if (identityPayload.isNotEmpty) {
+          try {
+            await _apiService.postDeviceJson(
+              '/device/identity/',
+              identityPayload,
+            );
+            _identitySyncError = null;
+          } on ApiException catch (error) {
+            if (error.statusCode >= 500) rethrow;
+            _identitySyncError =
+                'El servidor rechazó la edición (HTTP ${error.statusCode}). '
+                'Verifica que la SIM siga asignada a este equipo y que el ICCID no esté duplicado.';
+          }
+        }
       });
 
       if (mounted) {
         setState(() {
           _snapshot = snapshot;
-          _status = 'Sincronizado';
+          _status = _identitySyncError == null
+              ? 'Sincronizado'
+              : 'Identificadores pendientes';
           _lastSync = DateTime.now().toLocal().toString().substring(0, 16);
         });
+        if (_identitySyncError != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_identitySyncError!)),
+          );
+        }
       }
     } catch (error) {
       debugPrint('Error al sincronizar datos del dispositivo: $error');
@@ -209,6 +255,225 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
         });
       }
     }
+  }
+
+  Future<void> _loadIdentityOverrides() async {
+    final preferences = await SharedPreferences.getInstance();
+    final storedIdentity = preferences.getString('manual_device_identity');
+    if (storedIdentity == null) return;
+
+    final decoded = jsonDecode(storedIdentity);
+    if (decoded is! Map) {
+      throw const FormatException(
+          'Los identificadores locales no son válidos.');
+    }
+    final serial = decoded['serial'];
+    if (serial != null && serial is! String) {
+      throw const FormatException('El número de serie local no es válido.');
+    }
+    _serialOverride = serial as String?;
+    final storedOverrides = decoded['sims'];
+    if (storedOverrides == null) return;
+    if (storedOverrides is! Map) {
+      throw const FormatException(
+          'Los ICCID editados localmente no son válidos.');
+    }
+    for (final entry in storedOverrides.entries) {
+      if (entry.key is! String || entry.value is! Map) {
+        throw const FormatException(
+            'Un ICCID editado localmente no es válido.');
+      }
+      final override = Map<String, dynamic>.from(entry.value as Map);
+      if (override['sim_uuid'] is! String || override['iccid'] is! String) {
+        throw const FormatException(
+            'Faltan datos de un ICCID editado localmente.');
+      }
+      _iccidOverrides[entry.key as String] = override;
+    }
+  }
+
+  DeviceSnapshot _applyIdentityOverrides(
+    DeviceSnapshot snapshot,
+    String deviceUuid,
+  ) {
+    final sims = snapshot.sims.map((sim) {
+      final override = _iccidOverrides[_simUuid(deviceUuid, sim)];
+      return override == null
+          ? sim
+          : <String, dynamic>{...sim, 'iccid': override['iccid']};
+    }).toList();
+    return snapshot.copyWith(serial: _serialOverride, sims: sims);
+  }
+
+  String _simUuid(String deviceUuid, Map<String, dynamic> sim) {
+    final subscriptionId = sim['subscription_id']?.toString().trim();
+    if (subscriptionId != null && subscriptionId.isNotEmpty) {
+      return subscriptionId;
+    }
+    return 'sim-$deviceUuid-${sim['slot'] ?? 0}';
+  }
+
+  Future<void> _editIdentity() async {
+    final snapshot = _snapshot;
+    if (snapshot == null) return;
+
+    final deviceUuid =
+        snapshot.deviceId ?? 'flutter-${DateTime.now().millisecondsSinceEpoch}';
+    final serialController = TextEditingController(text: snapshot.serial ?? '');
+    final simControllers = <String, TextEditingController>{};
+    final simTargets = <String, Map<String, dynamic>>{};
+    for (var index = 0; index < snapshot.sims.length; index++) {
+      final sim = snapshot.sims[index];
+      final simUuid = _simUuid(deviceUuid, sim);
+      simTargets[simUuid] = {
+        'sim_uuid': simUuid,
+        if (sim['slot'] is num) 'slot': (sim['slot'] as num).toInt(),
+        'label': 'ICCID · SIM ${index + 1}',
+      };
+      simControllers[simUuid] =
+          TextEditingController(text: sim['iccid']?.toString() ?? '');
+    }
+
+    final formKey = GlobalKey<FormState>();
+    String? validationMessage;
+    Map<String, dynamic>? updates;
+    try {
+      updates = await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('Editar identificadores'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: serialController,
+                        maxLength: 255,
+                        decoration: const InputDecoration(
+                          labelText: 'Número de serie',
+                        ),
+                        validator: (value) => (value?.length ?? 0) > 255
+                            ? 'El número de serie es demasiado largo.'
+                            : null,
+                      ),
+                      if (simControllers.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            'No se detectaron SIM. Concede el permiso de teléfono y sincroniza para editar un ICCID.',
+                          ),
+                        ),
+                      for (final entry in simControllers.entries)
+                        TextFormField(
+                          controller: entry.value,
+                          maxLength: 255,
+                          decoration: InputDecoration(
+                            labelText:
+                                simTargets[entry.key]!['label'] as String,
+                          ),
+                          validator: (value) => (value?.length ?? 0) > 255
+                              ? 'El ICCID es demasiado largo.'
+                              : null,
+                        ),
+                      if (validationMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            validationMessage!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (!(formKey.currentState?.validate() ?? false)) return;
+                  final serial = serialController.text.trim();
+                  final sims = <Map<String, dynamic>>[];
+                  for (final entry in simControllers.entries) {
+                    final iccid = entry.value.text.trim();
+                    if (iccid.isEmpty) continue;
+                    sims.add({
+                      ...simTargets[entry.key]!,
+                      'iccid': iccid,
+                    }..remove('label'));
+                  }
+                  if (serial.isEmpty && sims.isEmpty) {
+                    setDialogState(() {
+                      validationMessage =
+                          'Escribe un número de serie o al menos un ICCID.';
+                    });
+                    return;
+                  }
+                  Navigator.of(dialogContext).pop({
+                    'serial': serial,
+                    'sims': sims,
+                  });
+                },
+                child: const Text('Guardar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } finally {
+      serialController.dispose();
+      for (final controller in simControllers.values) {
+        controller.dispose();
+      }
+    }
+    if (updates == null || !mounted) return;
+
+    final serial = updates['serial'] as String;
+    final sims = List<Map<String, dynamic>>.from(updates['sims'] as List);
+    final updatedSerial = serial.isNotEmpty ? serial : _serialOverride;
+    final updatedIccidOverrides =
+        Map<String, Map<String, dynamic>>.from(_iccidOverrides);
+    for (final sim in sims) {
+      final simUuid = sim['sim_uuid'] as String;
+      final override = Map<String, dynamic>.from(sim)..remove('label');
+      updatedIccidOverrides[simUuid] = override;
+    }
+
+    final preferences = await SharedPreferences.getInstance();
+    final saved = await preferences.setString(
+      'manual_device_identity',
+      jsonEncode({
+        if (updatedSerial != null) 'serial': updatedSerial,
+        'sims': updatedIccidOverrides,
+      }),
+    );
+    if (!saved) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('No se pudieron guardar los cambios en este teléfono.'),
+          ),
+        );
+      }
+      return;
+    }
+    _serialOverride = updatedSerial;
+    _iccidOverrides
+      ..clear()
+      ..addAll(updatedIccidOverrides);
+    await _collectAndSend();
   }
 
   Future<void> _postDeviceEvent(
@@ -286,6 +551,16 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
                       icon: Icons.phone_android_rounded,
                       color: const Color(0xFF2563EB),
                     ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed:
+                      _snapshot == null || _isLoading ? null : _editIdentity,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Editar serie e ICCID'),
+                ),
+              ),
               const SizedBox(height: 18),
               _MobileDataHero(snapshot: _snapshot),
               const SizedBox(height: 20),

@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from rest_framework import authentication, generics, permissions, status
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,7 +20,7 @@ from sims.models import Sim, SimTransferConflict, normalize_iccid
 from operadores.models import Operador
 
 from .models import CredencialDispositivo, Dispositivo
-from .serializers import DeviceConsumptionSerializer, DeviceNetworkSerializer, DeviceRegisterSerializer, DeviceSimSerializer, DeviceSimStatusSerializer, DeviceStatusSerializer, DispositivoEditSerializer, DispositivoSerializer
+from .serializers import DeviceConsumptionSerializer, DeviceIdentitySerializer, DeviceNetworkSerializer, DeviceRegisterSerializer, DeviceSimSerializer, DeviceSimStatusSerializer, DeviceStatusSerializer, DispositivoEditSerializer, DispositivoSerializer
 from usuarios.permissions import RolePermission
 from auditoria.services import record_action
 
@@ -133,6 +134,58 @@ class DeviceStatusView(APIView):
                 disponible=data.get('almacenamiento_disponible') or 0,
             )
         return Response({'device_id': device.id, 'received_at': timezone.now()})
+
+
+class DeviceIdentityView(APIView):
+    authentication_classes = [DeviceAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = DeviceIdentitySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        device = request.user
+
+        with transaction.atomic():
+            if 'serial' in data:
+                device.serial = data['serial'].strip()
+                device.save(update_fields=['serial', 'updated_at'])
+
+            updated_sims = []
+            for sim_data in data.get('sims', []):
+                sims = Sim.objects.select_for_update().filter(
+                    dispositivo=device,
+                    activo=True,
+                )
+                sim = None
+                if sim_data.get('sim_uuid'):
+                    sim = sims.filter(sim_uuid=sim_data['sim_uuid']).first()
+                elif 'slot' in sim_data:
+                    sim = sims.filter(slot=sim_data['slot']).order_by('-updated_at').first()
+                if sim is None:
+                    raise NotFound('No se encontró la SIM de este dispositivo.')
+
+                iccid = sim_data['iccid'].strip()
+                normalized_iccid = normalize_iccid(iccid)
+                if normalized_iccid and Sim.objects.exclude(pk=sim.pk).filter(
+                    iccid_normalized=normalized_iccid,
+                ).exists():
+                    raise ValidationError({
+                        'iccid': 'Ese ICCID ya está asignado a otra SIM.'
+                    })
+
+                sim.iccid = iccid
+                sim.save(update_fields=['iccid', 'updated_at'])
+                updated_sims.append({
+                    'sim_uuid': sim.sim_uuid,
+                    'slot': sim.slot,
+                    'iccid': sim.iccid,
+                })
+
+        return Response({
+            'serial': device.serial,
+            'sims': updated_sims,
+        })
 
 
 class DeviceNetworkView(APIView):

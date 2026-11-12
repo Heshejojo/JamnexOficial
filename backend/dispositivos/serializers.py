@@ -88,6 +88,27 @@ class DeviceSimSerializer(serializers.Serializer):
     roaming = serializers.BooleanField(required=False, allow_null=True)
 
 
+class DeviceIdentitySimSerializer(serializers.Serializer):
+    sim_uuid = serializers.CharField(max_length=255, required=False)
+    slot = serializers.IntegerField(min_value=0, required=False)
+    iccid = serializers.CharField(max_length=255, allow_blank=False)
+
+    def validate(self, attrs):
+        if not attrs.get('sim_uuid') and 'slot' not in attrs:
+            raise serializers.ValidationError('Se requiere sim_uuid o slot.')
+        return attrs
+
+
+class DeviceIdentitySerializer(serializers.Serializer):
+    serial = serializers.CharField(max_length=255, required=False, allow_blank=False)
+    sims = DeviceIdentitySimSerializer(many=True, required=False, allow_empty=False)
+
+    def validate(self, attrs):
+        if not attrs.get('serial') and not attrs.get('sims'):
+            raise serializers.ValidationError('Indica el número de serie o al menos un ICCID.')
+        return attrs
+
+
 class DeviceSimStatusSerializer(serializers.Serializer):
     sim_count = serializers.IntegerField(min_value=0, max_value=10)
     sim_slots = serializers.ListField(

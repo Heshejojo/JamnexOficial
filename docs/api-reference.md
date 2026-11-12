@@ -74,6 +74,31 @@ Recibe `sim_uuid`, ICCID, ranura, operador, país, número, eSIM, tecnología y
 roaming. La vista identifica la SIM, actualiza su dispositivo y registra la
 presencia histórica.
 
+### Editar número de serie e ICCID desde Android
+
+`POST /api/device/identity/`
+
+Actualiza el número de serie del dispositivo autenticado y/o los ICCID de SIMs
+que pertenecen a ese mismo dispositivo. Esta ruta es para correcciones hechas
+en la APK; los reportes automáticos no reemplazan esos valores manuales.
+
+```json
+{
+  "serial": "SERIAL-CORREGIDO",
+  "sims": [
+    {
+      "sim_uuid": "subscription-id",
+      "slot": 0,
+      "iccid": "8952020320430379646"
+    }
+  ]
+}
+```
+
+Se puede enviar solo `serial` o solo `sims`. Cada SIM debe identificarse por
+`sim_uuid` o por `slot`. El servidor rechaza ICCIDs ya asignados a otra SIM y
+no permite editar SIMs de otro dispositivo.
+
 ### Cantidad de SIMs
 
 `POST /api/device/sims/status/`
