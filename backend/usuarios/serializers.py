@@ -4,6 +4,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Usuario, Rol
 
+MODULE_PERMISSION_KEYS = ('dashboard', 'dispositivos', 'sims', 'usuarios', 'zonas')
+
 
 class RolSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,11 +35,7 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
 
     def validate_permisos(self, value):
         base = {
-            'dashboard': False,
-            'dispositivos': False,
-            'sims': False,
-            'usuarios': False,
-            'zonas': False,
+            key: False for key in MODULE_PERMISSION_KEYS
         }
         if not isinstance(value, dict):
             raise serializers.ValidationError('Permisos inválidos.')
@@ -67,7 +65,10 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password', None)
         role_id = validated_data.pop('rol_id', None)
-        user = Usuario(**validated_data, rol=self._role(role_id))
+        role = self._role(role_id)
+        if role.nombre.upper() == 'CONSULTA':
+            validated_data['permisos'] = {key: True for key in MODULE_PERMISSION_KEYS}
+        user = Usuario(**validated_data, rol=role)
         if password:
             user.set_password(password)
         else:
@@ -78,9 +79,12 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
         role_id = validated_data.pop('rol_id', None)
+        role = self._role(role_id)
+        if role.nombre.upper() == 'CONSULTA':
+            validated_data['permisos'] = {key: True for key in MODULE_PERMISSION_KEYS}
         for key, value in validated_data.items():
             setattr(instance, key, value)
-        instance.rol = self._role(role_id)
+        instance.rol = role
         if password:
             instance.set_password(password)
         instance.save()

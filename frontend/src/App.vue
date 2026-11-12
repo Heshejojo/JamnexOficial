@@ -78,7 +78,9 @@ let permissionRefreshTimer;
 
 const userName = computed(() => auth.user?.first_name || auth.user?.username || 'Administrador');
 const roleName = computed(() => auth.user?.rol?.nombre || 'Superadmin');
-const can = (key) => auth.user?.is_superuser || auth.user?.permisos?.[key] === true;
+const can = (key) => auth.user?.is_superuser
+  || auth.user?.rol?.nombre?.toUpperCase() === 'CONSULTA'
+  || auth.user?.permisos?.[key] === true;
 const initials = computed(() => {
   const base = userName.value || 'A';
   return base

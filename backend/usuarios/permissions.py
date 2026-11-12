@@ -10,6 +10,9 @@ class DashboardPermission(BasePermission):
             return False
         if getattr(user, 'is_superuser', False):
             return True
+        role = getattr(getattr(user, 'rol', None), 'nombre', '').upper()
+        if role == 'CONSULTA':
+            return True
         permisos = getattr(user, 'permisos', None)
         return isinstance(permisos, dict) and permisos.get('dashboard') is True
 
@@ -18,6 +21,10 @@ class RolePermission(BasePermission):
     message = 'No tienes permisos para realizar esta acción.'
 
     def has_module_permission(self, request):
+        role = getattr(getattr(request.user, 'rol', None), 'nombre', '').upper()
+        if role == 'CONSULTA':
+            return True
+
         path = request.path.strip('/').split('/')
         section = path[1] if path and path[0] == 'api' and len(path) > 1 else 'dashboard'
         if section == 'reportes' and len(path) > 2:

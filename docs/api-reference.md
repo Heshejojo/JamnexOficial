@@ -16,8 +16,8 @@ que comienzan con `/device/` usan la credencial propia del dispositivo.
 
 Los permisos por módulo se asignan en `permisos`; la clave `zonas` controla
 el acceso a Zonas y a `/api/areas/`. El rol `ADMIN` puede modificar los módulos
-permitidos; `CONSULTA` solo puede consultarlos (GET/HEAD/OPTIONS), también
-respetando los permisos asignados.
+permitidos; `CONSULTA` puede consultar todos los módulos (GET/HEAD/OPTIONS),
+pero no modificarlos.
 
 Encabezado:
 

@@ -66,16 +66,26 @@ class ConsultaRolePermissionsTest(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-    def test_can_read_zones_but_cannot_modify_them(self):
+    def test_can_read_all_modules_but_cannot_modify_them(self):
         response = self.client.get('/api/areas/')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get('/api/usuarios/')
         self.assertEqual(response.status_code, 200)
 
         response = self.client.post('/api/areas/', {'nombre': 'Nueva zona'}, format='json')
         self.assertEqual(response.status_code, 403)
 
-    def test_zones_permission_is_required_to_read_areas(self):
-        self.user.permisos['zonas'] = False
-        self.user.save(update_fields=['permisos'])
+    def test_admin_still_requires_zones_permission(self):
+        admin_role = Rol.objects.get(nombre='ADMIN')
+        admin = Usuario.objects.create_user(
+            username='area-admin',
+            email='area-admin@example.com',
+            password='test-password',
+            rol=admin_role,
+            permisos={'dashboard': True, 'dispositivos': True, 'sims': True, 'usuarios': True, 'zonas': False},
+        )
+        self.client.force_authenticate(user=admin)
 
         response = self.client.get('/api/areas/')
         self.assertEqual(response.status_code, 403)

@@ -27,8 +27,9 @@
           <div class="permissions">
             <span class="field-label">Permisos de acceso</span>
             <label v-for="permission in permissionOptions" :key="permission.key">
-              <input v-model="form.permisos[permission.key]" type="checkbox" />{{ permission.label }}
+              <input v-model="form.permisos[permission.key]" type="checkbox" :disabled="isConsultaRole" />{{ permission.label }}
             </label>
+            <small v-if="isConsultaRole">Consulta puede ver todos los módulos, pero no modificarlos.</small>
           </div>
           <select v-model="form.activo">
             <option :value="true">Activo</option>
@@ -73,7 +74,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import api from '../services/api';
 import { useAuthStore } from '../stores/auth';
 
@@ -107,9 +108,20 @@ const permissionOptions = [
   { key: 'zonas', label: 'Zonas' },
   { key: 'usuarios', label: 'Usuarios' },
 ];
+const isConsultaRole = computed(() => assignableRoles.value.some(
+  (role) => role.id === Number(form.rol_id) && role.nombre.toUpperCase() === 'CONSULTA'
+));
 const filtered = computed(() => items.value.filter((item) =>
   `${item.username} ${item.email} ${item.first_name} ${item.last_name}`.toLowerCase().includes(query.value.toLowerCase())
 ));
+
+watch(isConsultaRole, (isConsulta) => {
+  if (isConsulta) {
+    for (const permission of permissionOptions) {
+      form.permisos[permission.key] = true;
+    }
+  }
+});
 
 async function load() {
   loading.value = true;

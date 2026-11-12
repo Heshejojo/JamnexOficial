@@ -57,7 +57,12 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && !auth.token) return '/login';
 
   const permission = to.meta.permiso;
-  if (!permission || !auth.user || auth.user.is_superuser) return true;
+  if (
+    !permission
+    || !auth.user
+    || auth.user.is_superuser
+    || auth.user.rol?.nombre?.toUpperCase() === 'CONSULTA'
+  ) return true;
   if (auth.user.permisos?.[permission] === true) return true;
 
   const allowedRoutes = [
