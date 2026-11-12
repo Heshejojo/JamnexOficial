@@ -1,3 +1,0 @@
-sudo -u postgres psql -c '\du'
-
-grep -E '^(DB_USER|DATABASE_URL)=' /ruta/a/JamnexOficial/backend/.env
