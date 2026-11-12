@@ -1,3 +1,7 @@
-sudo kill -TERM <PID>
+joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ sudo kill -TERM <PID>
 sleep 1
 sudo ss -ltnp 'sport = :5174'
+bash: error sintáctico cerca del elemento inesperado `newline'
+State          Recv-Q         Send-Q                 Local Address:Port                 Peer Address:Port         Process
+LISTEN         175            511                          0.0.0.0:5174                      0.0.0.0:*             users:(("node",pid=1219801,fd=23))
+joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ 
