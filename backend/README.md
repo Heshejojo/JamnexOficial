@@ -29,6 +29,9 @@ python manage.py runserver 0.0.0.0:8000
 ```
 
 El módulo `areas` ya incluye el modelo, la migración `0001_initial`, los endpoints `GET/POST /api/areas/` y `GET/PUT/DELETE /api/areas/<id>/`.
+La migración `0002` renombra la tabla `areas_area` a `areas` y agrega `procesos`,
+`procesos_zona`, `subprocesos` y la relación `areas_procesos_zona`. Aplícala en
+el servidor con `python manage.py migrate areas`.
 
 ## Apps Django
 
