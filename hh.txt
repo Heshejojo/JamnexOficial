@@ -1,9 +1,13 @@
-joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ jobs -l
-[1]  1219771 Parado                  npm run dev
-[2]- 1406633 Parado                  npm run dev
-[3]+ 1406797 Parado                  npm run dev
-joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ sudo ss -lntp 'sport = :5174'
-[sudo] contraseña para joseluis: 
-State          Recv-Q         Send-Q                 Local Address:Port                 Peer Address:Port         Process                                     
-LISTEN         175            511                          0.0.0.0:5174                      0.0.0.0:*             users:(("node",pid=1219801,fd=23))         
-joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ ^C
+joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ npm run dev
+
+> agente-cfe-frontend@0.1.0 dev
+> vite
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+error when starting dev server:
+Error: Port 5174 is already in use
+    at Server.onError (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:45596:18)
+    at Server.emit (node:events:524:28)
+    at emitErrorNT (node:net:1944:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ 
