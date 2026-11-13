@@ -31,20 +31,29 @@
       </div>
 
 
-      <div class="attention-panel">
-        <div class="attention-heading"><div><span class="hero-kicker">♧ &nbsp; Atención</span><h3>Top 5 SIMs por consumo</h3></div><router-link to="/sims">Ver todas →</router-link></div>
-        <ul v-if="topSims.length" class="top-list">
-          <li v-for="(s, i) in topSims" :key="s.id">
-            <span class="top-rank">{{ i + 1 }}</span>
-            <div class="top-info">
-              <strong>{{ s.label }}</strong>
-              <div class="top-track"><span :style="{ width: `${s.percent}%` }"></span></div>
-            </div>
-            <b>{{ formatMb(s.value) }}</b>
-          </li>
-        </ul>
-        <p v-else class="top-empty">No se ha registrado consumo en {{ monthLabel }}.</p>
-        <div class="attention-footer">ⓘ &nbsp; Consumo de datos móviles de {{ monthLabel }}, según la actividad de los dispositivos.</div>
+      <div class="attention-panel location-panel">
+        <div class="attention-heading">
+          <div><span class="hero-kicker">⌖ &nbsp; Organización</span><h3>Ubicación de terminales</h3></div>
+          <router-link to="/zonas">Administrar zonas →</router-link>
+        </div>
+        <div class="location-counts">
+          <div class="location-count">
+            <span>Con ubicación</span>
+            <strong>{{ metrics.assignedDevices }}</strong>
+          </div>
+          <div class="location-count unassigned">
+            <span>Sin asignar</span>
+            <strong>{{ metrics.unassignedDevices }}</strong>
+          </div>
+        </div>
+        <div class="location-track" role="progressbar" :aria-valuenow="assignedPercent" aria-valuemin="0" aria-valuemax="100" aria-label="Porcentaje de terminales con ubicación">
+          <span :style="{ width: `${assignedPercent}%` }"></span>
+        </div>
+        <div class="attention-footer">
+          {{ metrics.devices
+            ? `${assignedPercent}% de las ${metrics.devices} terminales tienen una zona asignada.`
+            : 'Aún no hay terminales registradas.' }}
+        </div>
       </div>
     </section>
 
@@ -59,7 +68,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import api from '../services/api';
 
 const loading = ref(false);
@@ -71,8 +80,19 @@ const alerts = ref([]);
 const nowDate = new Date();
 const selectedMonth = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}`;
 const monthLabel = nowDate.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
-const topSims = ref([]);
-const metrics = reactive({ devices: 0, sims: 0, connected: 0, stale: 0, mobile: 0, consumption: 0 });
+const metrics = reactive({
+  devices: 0,
+  sims: 0,
+  connected: 0,
+  assignedDevices: 0,
+  unassignedDevices: 0,
+  stale: 0,
+  mobile: 0,
+  consumption: 0,
+});
+const assignedPercent = computed(() => metrics.devices
+  ? Math.round((metrics.assignedDevices / metrics.devices) * 100)
+  : 0);
 
 function asList(data) {
   return Array.isArray(data) ? data : data?.results || data?.value || [];
@@ -100,6 +120,8 @@ async function loadDashboard() {
     metrics.devices = summary.metrics.devices;
     metrics.sims = summary.metrics.sims;
     metrics.connected = summary.metrics.connected;
+    metrics.assignedDevices = summary.metrics.assigned_devices;
+    metrics.unassignedDevices = summary.metrics.unassigned_devices;
     metrics.mobile = monthly.reduce((sum, item) => sum + Number(item.consumo_datos_movil || 0), 0);
     metrics.consumption = metrics.mobile;
 
@@ -155,21 +177,6 @@ async function loadDashboard() {
           text: `${item.numero_telefonico || `SIM ${item.id}`} lleva ${pct.toFixed(0)}% del límite de 2 GB`,
         });
       }
-    });
-    const bySim = {};
-    monthly.forEach((item) => {
-      if (item.sim) bySim[item.sim] = (bySim[item.sim] || 0) + Number(item.consumo_datos_movil || 0);
-    });
-    const ranking = Object.entries(bySim).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const maxSim = ranking[0]?.[1] || 0;
-    topSims.value = ranking.map(([id, value]) => {
-      const found = sims.find((s) => String(s.id) === String(id));
-      return {
-        id,
-        label: found?.numero_telefonico || found?.operador_nombre || `SIM ${id}`,
-        value,
-        percent: maxSim ? Math.max(3, (value / maxSim) * 100) : 0,
-      };
     });
     alerts.value = newAlerts;
     lastSync.value = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -608,6 +615,14 @@ onBeforeUnmount(() => {
 .attention-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .attention-heading h3 { margin: 8px 0 0; color: #173b30; font-size: 0.95rem; }
 .attention-heading a { color: #1E9B48; font-size: 0.68rem; font-weight: 800; text-decoration: none; }
+.location-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 28px 0 16px; }
+.location-count { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px; border: 1px solid #dcefe4; border-radius: 8px; background: #f3fbf6; }
+.location-count span { color: #526179; font-size: .75rem; font-weight: 700; }
+.location-count strong { color: #167A39; font-size: 1.65rem; line-height: 1; }
+.location-count.unassigned { border-color: #f3e5c4; background: #fffbeb; }
+.location-count.unassigned strong { color: #b45309; }
+.location-track { height: 9px; overflow: hidden; border-radius: 5px; background: #e8edf2; }
+.location-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1E9B48, #00a878); transition: width .3s ease; }
 .attention-main { display: flex; align-items: center; gap: 14px; margin: 23px 0; }
 .attention-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #e4f8ee; color: #1E9B48; font-size: 1.4rem; }
 .attention-main strong { display: block; color: #26423a; font-size: 0.88rem; }
@@ -762,13 +777,4 @@ onBeforeUnmount(() => {
 .alerts-list li.warn { background: #fff8e8; border-color: #f59e0b; color: #92400e; }
 .alerts-list li.danger { background: #fff0ee; border-color: #ef4444; color: #b42318; }
 .alerts-ok { margin: 0; color: #167A39; font-size: 0.85rem; font-weight: 700; }
-.top-list { display: grid; gap: 12px; margin: 18px 0; padding: 0; list-style: none; }
-.top-list li { display: flex; align-items: center; gap: 12px; }
-.top-rank { width: 24px; height: 24px; display: grid; place-items: center; flex-shrink: 0; border-radius: 50%; background: #E6F6EC; color: #167A39; font-size: 0.72rem; font-weight: 800; }
-.top-info { min-width: 0; flex: 1; }
-.top-info strong { display: block; overflow: hidden; color: #26423a; font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
-.top-track { height: 6px; margin-top: 5px; overflow: hidden; border-radius: 3px; background: #E6EDF0; }
-.top-track span { display: block; height: 100%; border-radius: inherit; background: #1E9B48; }
-.top-list li > b { flex-shrink: 0; color: #121A2B; font-size: 0.8rem; }
-.top-empty { margin: 22px 0; color: #8a9a94; font-size: 0.82rem; text-align: center; }
 </style>

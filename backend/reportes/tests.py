@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from areas.models import Area
 from consumos.models import Consumo
 from dispositivos.models import Dispositivo
 from sims.models import Sim
@@ -49,3 +50,18 @@ class DashboardSummaryPermissionTest(TestCase):
         self.assertNotIn('consumo_wifi', response.data['consumption'][0])
         self.assertNotIn('serial', response.data['devices'][0])
         self.assertEqual(self.client.get('/api/dispositivos/').status_code, 403)
+
+    def test_dashboard_summary_counts_devices_with_and_without_zones(self):
+        area = Area.objects.create(nombre='Zona del dashboard')
+        Dispositivo.objects.create(modelo='Device with zone', area=area)
+        Dispositivo.objects.create(modelo='Device without zone')
+
+        today = timezone.localdate()
+        response = self.client.get(
+            '/api/dashboard/summary/',
+            {'anio': today.year, 'mes': today.month},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['metrics']['assigned_devices'], 1)
+        self.assertEqual(response.data['metrics']['unassigned_devices'], 2)

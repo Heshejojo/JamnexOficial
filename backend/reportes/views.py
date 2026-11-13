@@ -79,12 +79,16 @@ class DashboardSummaryView(APIView):
                 and device['ultimo_contacto'] >= timezone.now() - timedelta(hours=72)
             )
         sims = Sim.objects.select_related('operador').values('id', 'numero_telefonico', 'operador__nombre')
+        total_devices = Dispositivo.objects.count()
+        assigned_devices = Dispositivo.objects.filter(area__isnull=False).count()
 
         return Response({
             'metrics': {
-                'devices': Dispositivo.objects.count(),
+                'devices': total_devices,
                 'sims': Sim.objects.count(),
                 'connected': sum(device['activo'] for device in devices),
+                'assigned_devices': assigned_devices,
+                'unassigned_devices': total_devices - assigned_devices,
             },
             'devices': devices,
             'sims': [
