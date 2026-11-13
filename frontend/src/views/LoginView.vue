@@ -12,11 +12,11 @@
             <img class="brand-logo" src="/images/Logo1.jpg" alt="Jamnex" />
           </div>
           <h1>JAMNEX</h1>
-          <p>Monitorea dispositivos y líneas móviles desde un solo lugar.</p>
+          <p>Monitoreo de dispositivos y terminales CFE.</p>
           <ul class="aside-features">
             <li>Dispositivos en tiempo real</li>
             <li>Consumo de datos por línea</li>
-            <li>Reportes en Excel</li>
+            <li>Alertas y notificaciones</li>
           </ul>
         </div>
 
