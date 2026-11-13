@@ -1,18 +1,20 @@
-joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ npm install lucide-vue-next
-npm warn deprecated lucide-vue-next@1.0.0: Package deprecated. Please use @lucide/vue instead.
+[plugin:vite:import-analysis] Failed to resolve import "@lucide/vue" from "src/App.vue". Does the file exist?
 
-added 2 packages, and audited 66 packages in 10s
+/home/joseluis/JamnexCFE/frontend/src/App.vue:66:73
 
-15 packages are looking for funding
-  run `npm fund` for details
+1  |  import { computed, onMounted, onUnmounted, watch } from 'vue';
+2  |  import { useRouter } from 'vue-router';
+3  |  import { CreditCard, LayoutDashboard, MapPin, Smartphone, Users } from '@lucide/vue';
+   |                                                                          ^
+4  |  import { useAuthStore } from './stores/auth';
+5  |
 
-4 vulnerabilities (1 moderate, 3 high)
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-To address all issues (including breaking changes), run:
-  npm audit fix --force
-
-Run `npm audit` for details.
-joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ 
+    at TransformPluginContext._formatError (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+    at TransformPluginContext.error (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+    at normalizeUrl (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+    at async file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+    at async Promise.all (index 2)
+    at async TransformPluginContext.transform (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+    at async PluginContainer.transform (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+    at async loadAndTransform (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+    at async viteTransformMiddleware (file:///home/joseluis/JamnexCFE/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24
