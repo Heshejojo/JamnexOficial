@@ -63,7 +63,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { CreditCard, LayoutDashboard, MapPin, Smartphone, Users } from 'lucide-vue-next';
+import { CreditCard, LayoutDashboard, MapPin, Smartphone, Users } from '@lucide/vue';
 import { useAuthStore } from './stores/auth';
 
 const auth = useAuthStore();

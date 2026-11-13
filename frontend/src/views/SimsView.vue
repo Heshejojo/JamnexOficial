@@ -11,7 +11,10 @@
         <span class="sync-state" :class="{ syncing: loading, failed: loadError }">
           <i></i>{{ loadError ? 'Sin conexión' : loading ? 'Sincronizando' : `Actualizado ${lastSync}` }}
         </span>
-        <span v-if="selectedSim" class="live-status" :class="statusClass(selectedSim)">{{ statusLabel(selectedSim, true) }}</span>
+        <span v-if="selectedSim" class="live-status" :class="statusClass(selectedSim)">
+          <component :is="statusIcon(selectedSim)" class="ui-icon status-icon" aria-hidden="true" />
+          {{ statusLabel(selectedSim) }}
+        </span>
         <button class="primary-btn" :disabled="loading" @click="loadSims">Actualizar</button>
       </div>
     </header>
@@ -29,15 +32,15 @@
           aria-label="Cerrar aviso"
           :disabled="transferringConflictIds.includes(conflict.id)"
           @click="acknowledgeTransfer(conflict)"
-        >×</button>
+        ><XIcon class="ui-icon" aria-hidden="true" /></button>
       </article>
     </section>
 
     <div class="sim-layout">
       <section class="panel inventory-panel">
         <div class="panel-topline">
-          <div><span class="sim-section-icon">▤</span><div><p class="eyebrow">Líneas registradas</p><h3>Listado de SIMs</h3></div></div>
-          <div class="list-heading-actions"><span class="sim-count">{{ filteredSims.length }}</span><button class="devices-report-btn" type="button" @click="exportDevicesReport">⇩ Reporte dispositivos</button></div>
+          <div><span class="sim-section-icon"><CreditCard class="ui-icon" aria-hidden="true" /></span><div><p class="eyebrow">Líneas registradas</p><h3>Listado de SIMs</h3></div></div>
+          <div class="list-heading-actions"><span class="sim-count">{{ filteredSims.length }}</span><button class="devices-report-btn" type="button" @click="exportDevicesReport"><Download class="ui-icon" aria-hidden="true" />Reporte dispositivos</button></div>
         </div>
 
         <div class="search-box">
@@ -58,7 +61,7 @@
         <div v-if="filteredSims.length" class="list">
           <div v-for="sim in filteredSims" :key="sim._displayId" class="sim-row" :class="{ active: selectedSim && selectedSim._displayId === sim._displayId }">
             <div class="sim-info-block">
-              <span class="sim-row-icon">▤</span>
+              <span class="sim-row-icon"><CreditCard class="ui-icon" aria-hidden="true" /></span>
               <strong>{{ sim.numero_telefonico || 'Número no disponible' }}</strong>
               <small>
                 Dispositivo: {{ sim.dispositivo_nombre || 'Sin dispositivo asignado' }}
@@ -74,18 +77,19 @@
                 <div class="usage-bar"><i :class="usageLevel(sim)" :style="{ width: usagePercent(sim) + '%' }"></i></div>
               </div>
               <div class="sim-chips">
-                <span v-if="sim.dispositivos_count > 1" class="chip shared">⇄ Usada en {{ sim.dispositivos_count }} dispositivos</span>
+                <span v-if="sim.dispositivos_count > 1" class="chip shared"><ArrowLeftRight class="ui-icon inline-icon" aria-hidden="true" />Usada en {{ sim.dispositivos_count }} dispositivos</span>
               </div>
             </div>
             <div class="row-actions">
               <span class="status-badge" :class="statusClass(sim)">
+              <component :is="statusIcon(sim)" class="ui-icon status-icon" aria-hidden="true" />
               {{ statusLabel(sim) }}
               </span>
-              <button class="detail-btn" title="Ver detalles" aria-label="Ver detalles" @click="selectDetail(sim)">Ver detalles</button>
+              <button class="detail-btn" title="Ver detalles" aria-label="Ver detalles" @click="selectDetail(sim)"><ChevronRight class="ui-icon" aria-hidden="true" /></button>
               <button v-if="!auth.isReadOnly" class="secondary-btn small-btn" type="button" @click="toggleSimStatus(sim)">
                 {{ sim.activo ? 'Dar de baja' : 'Reactivar' }}
               </button>
-              <button v-if="!auth.isReadOnly" class="delete-btn" title="Eliminar definitivamente" aria-label="Eliminar la SIM" @click="hardDeleteSim(sim)">Eliminar</button>
+              <button v-if="!auth.isReadOnly" class="delete-btn" title="Eliminar definitivamente" aria-label="Eliminar la SIM" @click="hardDeleteSim(sim)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
             </div>
           </div>
         </div>
@@ -98,16 +102,17 @@
         <template v-if="selectedSim">
           <div class="panel-header">
             <div class="device-title-wrap">
-              <span class="detail-heading-icon">⚙</span>
+              <span class="detail-heading-icon"><Settings2 class="ui-icon" aria-hidden="true" /></span>
               <p class="eyebrow">Información técnica</p>
               <h3>{{ selectedSim.numero_telefonico || 'SIM sin número' }}</h3>
             </div>
             <div class="header-actions">
               <span class="live-status" :class="statusClass(selectedSim)">
-                {{ statusLabel(selectedSim, true) }}
+                <component :is="statusIcon(selectedSim)" class="ui-icon status-icon" aria-hidden="true" />
+                {{ statusLabel(selectedSim) }}
               </span>
-              <button v-if="!auth.isReadOnly" class="secondary-btn" type="button" @click="startEdit">✎ Editar</button>
-              <button class="secondary-btn" type="button" @click="selectedSim = null">Cerrar</button>
+              <button v-if="!auth.isReadOnly" class="secondary-btn" type="button" @click="startEdit"><Pencil class="ui-icon" aria-hidden="true" />Editar</button>
+              <button class="secondary-btn" type="button" @click="selectedSim = null"><XIcon class="ui-icon" aria-hidden="true" />Cerrar</button>
             </div>
           </div>
 
@@ -120,13 +125,13 @@
     <select v-model.number="selectedYear" aria-label="Año del reporte">
       <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
     </select>
-    <button class="export-btn" type="button" @click="exportMonthlyReport">⇩ Excel</button>
+    <button class="export-btn" type="button" @click="exportMonthlyReport"><Download class="ui-icon" aria-hidden="true" />Excel</button>
   </div>
 </div>
           
           <div class="device-summary">
   <div class="device-badge">
-    <span class="device-icon">▤</span>
+    <span class="device-icon"><CreditCard class="ui-icon" aria-hidden="true" /></span>
     <div>
       <small>Número de teléfono</small>
       <strong>{{ selectedSim.numero_telefonico || 'No disponible' }}</strong>
@@ -135,22 +140,22 @@
 
   <div class="summary-grid">
     <div class="summary-card blue">
-      <span class="summary-icon">▥</span>
+      <span class="summary-icon"><ChartColumn class="ui-icon" aria-hidden="true" /></span>
       <span class="metric-kicker">Datos móviles usados hoy</span>
       <strong>{{ todayUsed(selectedSim).toFixed(2) }} MB</strong>
     </div>
     <div class="summary-card green">
-      <span class="summary-icon">▥</span>
+      <span class="summary-icon"><ChartColumn class="ui-icon" aria-hidden="true" /></span>
       <span class="metric-kicker">Total acumulado del mes</span>
       <strong>{{ monthlyUsed(selectedSim).toFixed(2) }} MB</strong>
     </div>
     <div class="summary-card amber">
-      <span class="summary-icon">◷</span>
+      <span class="summary-icon"><Gauge class="ui-icon" aria-hidden="true" /></span>
       <span class="metric-kicker">Consumo mensual / límite</span>
       <strong>{{ formatDataAmount(monthlyUsed(selectedSim)) }} / {{ formatDataAmount(LIMIT_MB) }}</strong>
     </div>
     <div class="summary-card violet">
-      <span class="summary-icon">◎</span>
+      <span class="summary-icon"><RadioTower class="ui-icon" aria-hidden="true" /></span>
       <span class="metric-kicker">Operadora</span>
       <strong>{{ selectedSim.operador_nombre || 'Sin operador' }}</strong>
     </div>
@@ -162,7 +167,7 @@
               <div><span class="eyebrow">Movimientos</span><strong>Dispositivos donde ha estado esta SIM</strong></div>
               <span v-if="history.length" class="history-total">{{ historyTotal }} {{ historyTotal === 1 ? 'dispositivo' : 'dispositivos' }}</span>
             </div>
-            <p v-if="historyTotal > 1" class="history-warning">⚠ Esta SIM ha pasado por {{ historyTotal }} dispositivos. Revisa si se está prestando entre equipos.</p>
+            <p v-if="historyTotal > 1" class="history-warning"><TriangleAlert class="ui-icon inline-icon" aria-hidden="true" />Esta SIM ha pasado por {{ historyTotal }} dispositivos. Revisa si se está prestando entre equipos.</p>
             <p v-if="historyLoading && !history.length" class="history-empty">Cargando historial…</p>
             <p v-else-if="historyError" class="history-empty">{{ historyError }}</p>
             <p v-else-if="!history.length" class="history-empty">Aún no hay movimientos registrados para esta SIM.</p>
@@ -180,15 +185,15 @@
           </section>
 
           <div class="detail-grid">
-            <div class="detail-item"><span class="detail-icon">▤</span><span>Estado de la línea</span><strong>{{ statusLabel(selectedSim) }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">▥</span><span>Tipo de SIM</span><strong>{{ simType(selectedSim) }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">⌖</span><span>País</span><strong>{{ selectedSim.pais || 'No disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">♟</span><span>MCC / MNC</span><strong>{{ selectedSim.mcc || 'N/D' }} / {{ selectedSim.mnc || 'N/D' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">▤</span><span>ICCID</span><strong>{{ selectedSim.iccid || 'No disponible' }}</strong></div>   
-            <div class="detail-item"><span class="detail-icon">▥</span><span>Tecnología</span><strong>{{ selectedSim.tecnologia || 'No disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">⌁</span><span>Roaming</span><strong>{{ selectedSim.roaming ? 'Sí' : 'No' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">▥</span><span>Tipo de red</span><strong>{{ selectedSim.tipo_red || 'No disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">◷</span><span>Último reporte</span><strong>{{ selectedSim.ultimo_reporte ? formatDate(selectedSim.ultimo_reporte) : 'Sin reporte' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><component :is="statusIcon(selectedSim)" class="ui-icon" aria-hidden="true" /></span><span>Estado de la línea</span><strong>{{ statusLabel(selectedSim) }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><CreditCard class="ui-icon" aria-hidden="true" /></span><span>Tipo de SIM</span><strong>{{ simType(selectedSim) }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><MapPin class="ui-icon" aria-hidden="true" /></span><span>País</span><strong>{{ selectedSim.pais || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Globe2 class="ui-icon" aria-hidden="true" /></span><span>MCC / MNC</span><strong>{{ selectedSim.mcc || 'N/D' }} / {{ selectedSim.mnc || 'N/D' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Fingerprint class="ui-icon" aria-hidden="true" /></span><span>ICCID</span><strong>{{ selectedSim.iccid || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Signal class="ui-icon" aria-hidden="true" /></span><span>Tecnología</span><strong>{{ selectedSim.tecnologia || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Plane class="ui-icon" aria-hidden="true" /></span><span>Roaming</span><strong>{{ selectedSim.roaming ? 'Sí' : 'No' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Network class="ui-icon" aria-hidden="true" /></span><span>Tipo de red</span><strong>{{ selectedSim.tipo_red || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Clock class="ui-icon" aria-hidden="true" /></span><span>Último reporte</span><strong>{{ selectedSim.ultimo_reporte ? formatDate(selectedSim.ultimo_reporte) : 'Sin reporte' }}</strong></div>
             
           </div>
 
@@ -205,7 +210,7 @@
       <form class="edit-modal" @submit.prevent="saveEdit">
         <div class="modal-heading">
           <div><p class="eyebrow">Editar línea</p><h3>{{ editForm.numero_telefonico || 'SIM seleccionada' }}</h3></div>
-          <button type="button" class="modal-close" aria-label="Cerrar" @click="editingSim = false">×</button>
+          <button type="button" class="modal-close" aria-label="Cerrar" @click="editingSim = false"><XIcon class="ui-icon" aria-hidden="true" /></button>
         </div>
         <label>Número de teléfono<input v-model="editForm.numero_telefonico" type="text" /></label>
         <label>ICCID<input v-model="editForm.iccid" type="text" /></label>
@@ -220,6 +225,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { ArrowLeftRight, ChartColumn, ChevronRight, Circle, CircleCheck, CircleX, Clock, CreditCard, Download, Fingerprint, Gauge, Globe2, MapPin, Network, Pencil, Plane, RadioTower, Settings2, Signal, Trash2, TriangleAlert, X as XIcon } from '@lucide/vue';
 import api from '../services/api';
 import { useAuthStore } from '../stores/auth';
 
@@ -304,11 +310,17 @@ function matchesStatus(sim, filter) {
   return true;
 }
 
-function statusLabel(sim, withDot = false) {
+function statusLabel(sim) {
   let label = 'Dada de baja';
   if (sim.activo && sim.detectada) label = 'En uso';
   else if (sim.activo) label = 'Sin uso';
-  return withDot ? `● ${label}` : label;
+  return label;
+}
+
+function statusIcon(sim) {
+  if (sim.activo && sim.detectada) return CircleCheck;
+  if (!sim.activo) return CircleX;
+  return Circle;
 }
 
 function statusClass(sim) {
@@ -1461,7 +1473,7 @@ onBeforeUnmount(() => {
 .panel-topline > div:first-child { display: flex; align-items: center; gap: 12px; }
 .sim-count { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; color: #1E9B48; background: #E6F6EC; font-size: 0.76rem; font-weight: 800; }
 .list-heading-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.devices-report-btn { border: 1px solid #C7D3E8; padding: 7px 9px; border-radius: 6px; background: #E6F6EC; color: #167A39; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
+.devices-report-btn { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #C7D3E8; padding: 7px 9px; border-radius: 6px; background: #E6F6EC; color: #167A39; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
 .devices-report-btn:hover { background: #d8f1e4; }
 .sim-row { position: relative; padding-left: 54px; border-left: 3px solid transparent; }
 .sim-row.active { border-left-color: #1E9B48; }
@@ -1471,10 +1483,8 @@ onBeforeUnmount(() => {
 .sim-row { padding: 14px; border-left-width: 3px; border-radius: 6px; background: #F4F6FA; }
 .sim-row-icon { display: none; }
 .sim-row .row-actions { gap: 8px; }
-.sim-row .detail-btn { width: 30px; padding: 8px 0; font-size: 0; background: #E6F6EC; color: #167A39; border-radius: 6px; }
-.sim-row .detail-btn::after { content: '›'; font-size: 1.2rem; line-height: 1; }
-.sim-row .delete-btn { width: 30px; padding: 8px 0; font-size: 0; border-radius: 6px; background: #fff0ee; color: #b42318; }
-.sim-row .delete-btn::after { content: '×'; font-size: 1.15rem; line-height: 1; }
+.sim-row .detail-btn { display: grid; place-items: center; width: 30px; padding: 8px 0; font-size: 0; background: #E6F6EC; color: #167A39; border-radius: 6px; }
+.sim-row .delete-btn { display: grid; place-items: center; width: 30px; padding: 8px 0; font-size: 0; border-radius: 6px; background: #fff0ee; color: #b42318; }
 .sim-row .status-badge { border-radius: 4px; background: #E6F6EC; color: #167A39; }
 .detail-heading-icon { position: absolute; left: 0; top: 0; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: #1E9B48; background: #E6F6EC; font-size: 1.15rem; }
 .device-title-wrap { position: relative; padding-left: 50px; }
@@ -1504,13 +1514,13 @@ onBeforeUnmount(() => {
 .monthly-toolbar strong { display: block; margin-top: 4px; color: #121A2B; font-size: 0.9rem; text-transform: capitalize; }
 .monthly-actions { display: flex; align-items: center; gap: 8px; }
 .monthly-actions input { padding: 8px 9px; border: 1px solid #DCE3EE; border-radius: 6px; background: #fff; color: #121A2B; }
-.export-btn { border: 0; padding: 9px 12px; border-radius: 6px; background: #1E9B48; color: #fff; font-weight: 800; cursor: pointer; }
+.export-btn { display: inline-flex; align-items: center; gap: 6px; border: 0; padding: 9px 12px; border-radius: 6px; background: #1E9B48; color: #fff; font-weight: 800; cursor: pointer; }
 .export-btn:hover { background: #167A39; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(7, 38, 29, 0.34); }
 .edit-modal { width: min(100%, 480px); display: grid; gap: 14px; padding: 24px; border: 1px solid #DCE3EE; border-radius: 12px; background: #fff; box-shadow: 0 22px 60px rgba(0, 67, 49, 0.22); }
 .modal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #DCE3EE; }
 .modal-heading h3 { margin: 0; color: #121A2B; }
-.modal-close { border: 0; background: transparent; color: #5B6B82; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.modal-close { display: grid; place-items: center; border: 0; background: transparent; color: #5B6B82; cursor: pointer; }
 .edit-modal label { display: grid; gap: 6px; color: #5B6B82; font-size: 0.76rem; font-weight: 700; }
 .edit-modal input[type="text"] { width: 100%; padding: 10px 11px; border: 1px solid #DCE3EE; border-radius: 7px; background: #F4F6FA; color: #121A2B; }
 .edit-modal input[type="text"]:focus { outline: 0; border-color: #008f68; box-shadow: 0 0 0 0.18rem rgba(0,143,104,0.12); }
@@ -1692,6 +1702,14 @@ onBeforeUnmount(() => {
 .history-heading strong { display: block; color: #121A2B; font-size: 0.92rem; }
 .history-total { padding: 3px 10px; border-radius: 999px; background: #E9EEFA; color: #3A6FB0; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
 .history-warning { margin: 0 0 10px; padding: 8px 10px; border-radius: 6px; background: #FEF0C7; color: #B54708; font-size: 0.8rem; font-weight: 600; }
+.ui-icon { width: 20px; height: 20px; stroke-width: 1.8; flex: 0 0 auto; }
+.sim-row .ui-icon, .devices-report-btn .ui-icon, .export-btn .ui-icon, .secondary-btn .ui-icon { width: 16px; height: 16px; }
+.status-badge, .live-status { display: inline-flex; align-items: center; gap: 5px; }
+.status-icon { width: 15px; height: 15px; }
+.inline-icon { width: 15px; height: 15px; }
+.chip.shared { display: inline-flex; align-items: center; gap: 5px; }
+.history-warning { display: flex; align-items: center; gap: 5px; }
+.modal-close .ui-icon { width: 20px; height: 20px; }
 .history-empty { margin: 0; color: #5B6B82; font-size: 0.85rem; }
 .history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; }
 .history-list li { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 0 10px 22px; border-top: 1px solid #EEF2F7; }

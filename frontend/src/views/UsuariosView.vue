@@ -4,7 +4,7 @@
     <div class="grid-layout">
       <section v-if="!auth.isReadOnly" class="panel user-form-panel">
         <div class="panel-heading">
-          <span class="panel-icon">＋</span>
+          <span class="panel-icon"><UserPlus class="ui-icon" aria-hidden="true" /></span>
           <div>
             <h3>{{ editing ? 'Editar usuario' : 'Agregar usuario' }}</h3>
             <p class="panel-intro">Define el rol y qué módulos puede consultar cada cuenta.</p>
@@ -44,7 +44,7 @@
       </section>
       <section class="panel users-list-panel">
         <div class="panel-heading">
-          <span class="panel-icon">♙</span>
+          <span class="panel-icon"><Users class="ui-icon" aria-hidden="true" /></span>
           <div>
             <h3>Usuarios</h3>
             <p class="panel-intro">{{ filtered.length }} cuentas registradas</p>
@@ -62,10 +62,13 @@
                 <span v-for="permission in visiblePermissions(item)" :key="permission.key">{{ permission.label }}</span>
               </div>
             </div>
-            <span class="user-status" :class="item.activo ? 'active' : 'inactive'">● {{ item.activo ? 'Activo' : 'Inactivo' }}</span>
+            <span class="user-status" :class="item.activo ? 'active' : 'inactive'">
+              <component :is="item.activo ? CircleCheck : CircleX" class="ui-icon status-icon" aria-hidden="true" />
+              {{ item.activo ? 'Activo' : 'Inactivo' }}
+            </span>
             <div v-if="!auth.isReadOnly" class="row-actions">
-              <button class="edit-btn" title="Editar usuario" @click="edit(item)">✎</button>
-              <button class="delete-btn" title="Eliminar usuario" @click="remove(item)">×</button>
+              <button class="edit-btn" title="Editar usuario" aria-label="Editar usuario" @click="edit(item)"><Pencil class="ui-icon" aria-hidden="true" /></button>
+              <button class="delete-btn" title="Eliminar usuario" aria-label="Eliminar usuario" @click="remove(item)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
             </div>
           </div>
         </div>
@@ -75,6 +78,7 @@
 </template>
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { CircleCheck, CircleX, Pencil, Trash2, UserPlus, Users } from '@lucide/vue';
 import api from '../services/api';
 import { useAuthStore } from '../stores/auth';
 
@@ -303,6 +307,10 @@ onMounted(load);
 .users-list-panel .edit-btn, .users-list-panel .delete-btn { width: 30px; padding: 8px 0; font-size: 1rem; line-height: 1; }
 .users-list-panel .edit-btn { background: #E6F6EC; color: #167A39; }
 .users-list-panel .delete-btn { background: #fff0ee; color: #b42318; }
+.ui-icon { width: 18px; height: 18px; stroke-width: 1.8; flex: 0 0 auto; }
+.users-list-panel .ui-icon { width: 16px; height: 16px; }
+.user-status { display: inline-flex; align-items: center; gap: 5px; }
+.status-icon { width: 14px; height: 14px; }
 
 @media (max-width: 640px) {
   .crud-page { padding: 16px 12px; }

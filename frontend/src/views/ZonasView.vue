@@ -22,7 +22,7 @@
       <article class="hierarchy-card">
         <div class="card-heading">
           <div><span class="step-number">1</span><div><h3>Distribuciones</h3><small>{{ activeProcesses.length }} activas</small></div></div>
-          <button v-if="!auth.isReadOnly" class="add-btn" type="button" @click="openCreate('proceso')">＋ Agregar</button>
+          <button v-if="!auth.isReadOnly" class="add-btn" type="button" @click="openCreate('proceso')"><Plus class="ui-icon" aria-hidden="true" />Agregar</button>
         </div>
         <div v-if="!processes.length" class="empty-state">Agrega la primera distribución para comenzar.</div>
         <div
@@ -33,12 +33,12 @@
         >
           <button class="catalog-select" type="button" @click="selectProcess(process)">
             <span class="catalog-copy"><strong>{{ process.nombre }}</strong><small>{{ process.activo ? 'Activa' : 'Inactiva' }}</small></span>
-            <span class="chevron">›</span>
+            <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
-            <button v-if="!auth.isReadOnly" type="button" title="Editar distribución" @click="openEdit('proceso', process)">✎</button>
-            <button v-if="!auth.isReadOnly" type="button" :title="process.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('proceso', process)">{{ process.activo ? '●' : '○' }}</button>
-            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar distribución" @click="deleteCatalog('proceso', process)">×</button>
+            <button v-if="!auth.isReadOnly" type="button" title="Editar distribución" aria-label="Editar distribución" @click="openEdit('proceso', process)"><Pencil class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :title="process.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('proceso', process)"><component :is="process.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar distribución" aria-label="Eliminar distribución" @click="deleteCatalog('proceso', process)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
       </article>
@@ -52,7 +52,7 @@
             type="button"
             :disabled="!selectedProcess || !selectedProcess.activo"
             @click="openCreate('subproceso')"
-          >＋ Agregar</button>
+          ><Plus class="ui-icon" aria-hidden="true" />Agregar</button>
         </div>
         <div v-if="!selectedProcess" class="empty-state">Selecciona una distribución para ver sus divisiones.</div>
         <div v-else-if="!visibleSubprocesos.length" class="empty-state">Todavía no hay divisiones en esta distribución.</div>
@@ -64,12 +64,12 @@
         >
           <button class="catalog-select" type="button" @click="selectSubproceso(division)">
             <span class="catalog-copy"><strong>{{ division.nombre }}</strong><small>{{ division.activo ? 'Activa' : 'Inactiva' }}</small></span>
-            <span class="chevron">›</span>
+            <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
-            <button v-if="!auth.isReadOnly" type="button" title="Editar división" @click="openEdit('subproceso', division)">✎</button>
-            <button v-if="!auth.isReadOnly" type="button" :title="division.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('subproceso', division)">{{ division.activo ? '●' : '○' }}</button>
-            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar división" @click="deleteCatalog('subproceso', division)">×</button>
+            <button v-if="!auth.isReadOnly" type="button" title="Editar división" aria-label="Editar división" @click="openEdit('subproceso', division)"><Pencil class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :title="division.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('subproceso', division)"><component :is="division.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar división" aria-label="Eliminar división" @click="deleteCatalog('subproceso', division)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
       </article>
@@ -83,7 +83,7 @@
             type="button"
             :disabled="!selectedSubproceso || !selectedSubproceso.activo"
             @click="openCreate('area')"
-          >＋ Agregar</button>
+          ><Plus class="ui-icon" aria-hidden="true" />Agregar</button>
         </div>
         <div v-if="!selectedSubproceso" class="empty-state">Selecciona una división para ver sus zonas.</div>
         <div v-else-if="!visibleAreas.length" class="empty-state">Todavía no hay zonas en esta división.</div>
@@ -95,12 +95,12 @@
         >
           <button class="catalog-select" type="button" @click="selectArea(area)">
             <span class="catalog-copy"><strong>{{ area.nombre }}</strong><small>{{ deviceCount(area.id) }} terminales · {{ area.activo ? 'Activa' : 'Inactiva' }}</small></span>
-            <span class="chevron">›</span>
+            <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
-            <button v-if="!auth.isReadOnly" type="button" title="Editar zona" @click="openEdit('area', area)">✎</button>
-            <button v-if="!auth.isReadOnly" type="button" :title="area.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('area', area)">{{ area.activo ? '●' : '○' }}</button>
-            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar zona" @click="deleteCatalog('area', area)">×</button>
+            <button v-if="!auth.isReadOnly" type="button" title="Editar zona" aria-label="Editar zona" @click="openEdit('area', area)"><Pencil class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :title="area.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('area', area)"><component :is="area.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar zona" aria-label="Eliminar zona" @click="deleteCatalog('area', area)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
       </article>
@@ -122,18 +122,19 @@
           type="button"
           :disabled="!selectedArea.activo || loading"
           @click="openAssignment"
-        >＋ Asignar terminales</button>
+        ><Plus class="ui-icon" aria-hidden="true" />Asignar terminales</button>
       </div>
 
       <div v-if="selectedArea && currentDevices.length" class="device-list">
         <div v-for="device in currentDevices" :key="device.id" class="device-row">
-          <div class="device-avatar">▣</div>
+          <div class="device-avatar"><Smartphone class="ui-icon" aria-hidden="true" /></div>
           <div class="device-copy">
             <strong>{{ device.modelo || device.device_uuid || `Terminal ${device.id}` }}</strong>
             <small>{{ device.fabricante || 'Fabricante no disponible' }} · {{ device.device_uuid || 'Sin UUID' }}</small>
           </div>
           <span class="device-status" :class="device.en_linea ? 'online' : 'offline'">
-            {{ device.en_linea ? '● En línea' : '● Fuera de línea' }}
+            <component :is="device.en_linea ? CircleCheck : CircleX" class="ui-icon status-icon" aria-hidden="true" />
+            {{ device.en_linea ? 'En línea' : 'Fuera de línea' }}
           </span>
           <button
             v-if="!auth.isReadOnly"
@@ -157,7 +158,7 @@
             <p class="eyebrow">{{ editingId ? 'Editar' : 'Agregar' }} {{ catalogLabel(editingCatalog) }}</p>
             <h3>{{ editingId ? 'Actualizar información' : `Nueva ${catalogLabel(editingCatalog).toLowerCase()}` }}</h3>
           </div>
-          <button class="modal-close" type="button" aria-label="Cerrar" @click="closeCatalog">×</button>
+          <button class="modal-close" type="button" aria-label="Cerrar" @click="closeCatalog"><XIcon class="ui-icon" aria-hidden="true" /></button>
         </div>
         <label>
           Nombre
@@ -182,13 +183,13 @@
             <p class="eyebrow">Asignar terminales</p>
             <h3 id="assignment-title">{{ selectedArea.nombre }}</h3>
           </div>
-          <button class="modal-close" type="button" aria-label="Cerrar" @click="closeAssignment">×</button>
+          <button class="modal-close" type="button" aria-label="Cerrar" @click="closeAssignment"><XIcon class="ui-icon" aria-hidden="true" /></button>
         </div>
         <input v-model="deviceQuery" class="device-search" placeholder="Buscar por modelo, fabricante o UUID" />
         <div class="assignment-list">
           <label v-for="device in assignableDevices" :key="device.id" class="assignment-row">
             <input v-model="selectedDeviceIds" type="checkbox" :value="device.id" />
-            <span class="device-avatar">▣</span>
+            <span class="device-avatar"><Smartphone class="ui-icon" aria-hidden="true" /></span>
             <span class="device-copy">
               <strong>{{ device.modelo || device.device_uuid || `Terminal ${device.id}` }}</strong>
               <small>
@@ -215,6 +216,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { ChevronRight, CircleCheck, CircleX, Pencil, Plus, Smartphone, Trash2, ToggleLeft, ToggleRight, X as XIcon } from '@lucide/vue';
 import api from '../services/api';
 import { useAuthStore } from '../stores/auth';
 
@@ -502,7 +504,7 @@ onMounted(loadData);
 .sync-state i { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
 .sync-state.syncing i { background: #f59e0b; }.sync-state.failed { color: #dc2626; }.sync-state.failed i { background: #ef4444; }
 .primary-btn,.secondary-btn { border: 0; border-radius: 7px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
-.primary-btn { color: #fff; background: #1E9B48; }.primary-btn:hover:not(:disabled) { background: #167A39; }.secondary-btn { color: #334155; background: #E8EDF5; }
+.primary-btn { display: inline-flex; align-items: center; gap: 5px; color: #fff; background: #1E9B48; }.primary-btn:hover:not(:disabled) { background: #167A39; }.secondary-btn { color: #334155; background: #E8EDF5; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 .hierarchy-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; align-items: stretch; }
 .hierarchy-card,.devices-panel { min-width: 0; padding: 16px; border: 1px solid #DCE3EE; border-radius: 10px; background: #fff; box-shadow: 0 6px 18px rgba(0,67,49,.04); }
@@ -513,19 +515,20 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .step-number { display: grid; place-items: center; flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; color: #167A39; background: #E6F6EC; font-size: .8rem; font-weight: 800; }
 .card-heading h3,.devices-heading h3 { margin: 0; color: #121A2B; font-size: 1rem; }
 .card-heading small { display: block; max-width: 180px; margin-top: 3px; overflow: hidden; color: #64748b; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
-.add-btn { flex: 0 0 auto; padding: 8px 9px; border: 1px solid #BFE6CB; border-radius: 7px; color: #167A39; background: #F0FAF3; font-size: .72rem; font-weight: 800; cursor: pointer; }
+.add-btn { display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; padding: 8px 9px; border: 1px solid #BFE6CB; border-radius: 7px; color: #167A39; background: #F0FAF3; font-size: .72rem; font-weight: 800; cursor: pointer; }
 .catalog-row { display: flex; width: 100%; align-items: center; gap: 8px; margin-top: 6px; padding: 6px 8px 6px 10px; border: 1px solid #E5EAF1; border-radius: 7px; color: #243247; background: #fff; }
 .catalog-row:hover,.catalog-row.selected { border-color: #8BC99A; background: #F0FAF3; }.catalog-row.inactive { opacity: .58; }
 .catalog-select { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
 .catalog-copy,.device-copy { display: grid; min-width: 0; gap: 4px; }.catalog-copy strong,.device-copy strong { overflow: hidden; color: #172337; font-size: .83rem; text-overflow: ellipsis; white-space: nowrap; }.catalog-copy small,.device-copy small { overflow: hidden; color: #64748b; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
-.row-tools { display: flex; align-items: center; gap: 3px; flex: 0 0 auto; }.row-tools button { width: 27px; height: 27px; padding: 0; border: 0; border-radius: 5px; color: #526179; background: transparent; cursor: pointer; }.row-tools button:hover { color: #167A39; background: #E6F6EC; }.row-tools .delete-item { color: #b42318; }.row-tools .delete-item:hover { color: #991b1b; background: #fee2e2; }.chevron { color: #94a3b8; font-size: 1.15rem; }
+.row-tools { display: flex; align-items: center; gap: 3px; flex: 0 0 auto; }.row-tools button { display: grid; place-items: center; width: 27px; height: 27px; padding: 0; border: 0; border-radius: 5px; color: #526179; background: transparent; cursor: pointer; }.row-tools button:hover { color: #167A39; background: #E6F6EC; }.row-tools .delete-item { color: #b42318; }.row-tools .delete-item:hover { color: #991b1b; background: #fee2e2; }.chevron { color: #94a3b8; }
 .empty-state { display: grid; min-height: 92px; place-content: center; gap: 8px; padding: 14px; color: #64748b; font-size: .78rem; text-align: center; }.large-empty { min-height: 130px; }
 .devices-panel { padding: 18px; }.devices-heading { margin-bottom: 14px; }.devices-heading>div { min-width: 0; }.panel-caption span { padding: 0 5px; color: #94a3b8; }
-.device-list { display: grid; gap: 8px; }.device-row { display: flex; min-width: 0; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #E5EAF1; border-radius: 8px; background: #F8FAFC; }.device-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 9px; color: #167A39; background: #E6F6EC; font-size: 1.1rem; }.device-copy { flex: 1; }.device-status { flex: 0 0 auto; font-size: .7rem; font-weight: 800; white-space: nowrap; }.device-status.online { color: #15803d; }.device-status.offline { color: #64748b; }.link-button,.text-button { border: 0; color: #167A39; background: transparent; font-size: .74rem; font-weight: 800; cursor: pointer; }.text-button { justify-self: center; }
+.device-list { display: grid; gap: 8px; }.device-row { display: flex; min-width: 0; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #E5EAF1; border-radius: 8px; background: #F8FAFC; }.device-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 9px; color: #167A39; background: #E6F6EC; }.device-copy { flex: 1; }.device-status { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font-size: .7rem; font-weight: 800; white-space: nowrap; }.device-status.online { color: #15803d; }.device-status.offline { color: #64748b; }.link-button,.text-button { border: 0; color: #167A39; background: transparent; font-size: .74rem; font-weight: 800; cursor: pointer; }.text-button { justify-self: center; }
 .error-banner,.form-error,.success-banner { margin: 0; padding: 10px 12px; border: 1px solid #fecaca; border-radius: 7px; color: #b42318; background: #fff0ee; font-size: .78rem; }.success-banner { border-color: #bbf7d0; color: #166534; background: #f0fdf4; }.form-error { margin-top: 12px; }
 .modal-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: 18px; background: rgba(15,23,42,.55); }
 .catalog-modal { width: min(100%,480px); max-height: min(90vh,760px); overflow-y: auto; padding: 20px; border: 1px solid #DCE3EE; border-radius: 12px; background: #fff; box-shadow: 0 24px 70px rgba(15,23,42,.25); }.assignment-modal { width: min(100%,650px); }
-.modal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; }.modal-heading h3 { margin: 0; color: #121A2B; }.modal-close { width: 34px; height: 34px; border: 0; border-radius: 7px; color: #475569; background: #F1F5F9; font-size: 1.35rem; cursor: pointer; }
+.modal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; }.modal-heading h3 { margin: 0; color: #121A2B; }.modal-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 7px; color: #475569; background: #F1F5F9; cursor: pointer; }
+.ui-icon { width: 18px; height: 18px; stroke-width: 1.8; flex: 0 0 auto; }.add-btn .ui-icon { width: 16px; height: 16px; }.chevron.ui-icon { width: 17px; height: 17px; }.device-status .ui-icon { width: 14px; height: 14px; }.modal-close .ui-icon { width: 18px; height: 18px; }
 .catalog-modal>label { display: grid; gap: 6px; margin: 14px 0; color: #334155; font-size: .78rem; font-weight: 700; }.catalog-modal input:not([type=checkbox]),.catalog-modal textarea { width: 100%; padding: 10px 11px; border: 1px solid #DCE3EE; border-radius: 7px; color: #172337; background: #F8FAFC; font: inherit; }.catalog-modal textarea { resize: vertical; }.optional-label { color: #94a3b8; font-weight: 400; }.modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; }.device-search { margin-bottom: 10px; }
 .assignment-list { display: grid; max-height: 45vh; overflow-y: auto; gap: 6px; }.assignment-row { display: flex; align-items: center; gap: 10px; padding: 9px; border: 1px solid #E5EAF1; border-radius: 7px; cursor: pointer; }.assignment-row input { flex: 0 0 auto; accent-color: #1E9B48; }.assignment-row .device-copy { flex: 1; }
 @media(max-width:1000px) { .hierarchy-grid { grid-template-columns: 1fr 1fr; }.hierarchy-card:last-child { grid-column: 1 / -1; } }

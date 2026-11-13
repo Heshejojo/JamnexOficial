@@ -17,7 +17,7 @@
     <div class="device-layout">
       <section class="panel inventory-panel">
         <div class="panel-topline">
-          <div><span class="device-section-icon">▣</span><div><p class="eyebrow">Equipos registrados</p><h3>Listado de dispositivos</h3></div></div>
+          <div><span class="device-section-icon"><Smartphone class="ui-icon" aria-hidden="true" /></span><div><p class="eyebrow">Equipos registrados</p><h3>Listado de dispositivos</h3></div></div>
           <span class="device-count">{{ filteredItems.length }}</span>
         </div>
 
@@ -37,14 +37,15 @@
               >
                 {{ getSimReportText(item.simCount, item) }}
               </small>
-              <small v-if="hasManySimChanges(item)" class="sim-churn">⚠ {{ item.sims_distintas_30d }} SIMs distintas en 30 días</small>
+              <small v-if="hasManySimChanges(item)" class="sim-churn"><TriangleAlert class="ui-icon inline-icon" aria-hidden="true" />{{ item.sims_distintas_30d }} SIMs distintas en 30 días</small>
             </div>
             <div class="row-actions">
               <span class="status-badge" :class="item.en_linea ? 'active' : 'inactive'">
-                {{ item.en_linea ? '● Activo' : '● Inactivo' }}
+                <component :is="item.en_linea ? CircleCheck : CircleX" class="ui-icon status-icon" aria-hidden="true" />
+                {{ item.en_linea ? 'Activo' : 'Inactivo' }}
               </span>
-              <button class="detail-btn" @click="selectDetail(item)">Ver detalles</button>
-              <button v-if="!auth.isReadOnly" class="revoke-btn" @click="deleteDevice(item)">Eliminar</button>
+              <button class="detail-btn" title="Ver detalles" aria-label="Ver detalles" @click="selectDetail(item)"><ChevronRight class="ui-icon" aria-hidden="true" /></button>
+              <button v-if="!auth.isReadOnly" class="revoke-btn" title="Eliminar dispositivo" aria-label="Eliminar dispositivo" @click="deleteDevice(item)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
             </div>
           </div>
         </div>
@@ -60,16 +61,17 @@
         <template v-if="selectedDevice">
           <div class="panel-header">
             <div class="device-title-wrap">
-              <span class="detail-heading-icon">▣</span>
+              <span class="detail-heading-icon"><Smartphone class="ui-icon" aria-hidden="true" /></span>
               <p class="eyebrow">Ficha técnica</p>
               <h3>{{ selectedDevice.modelo || selectedDevice.device_uuid }}</h3>
             </div>
             <div class="header-actions">
               <span class="live-status" :class="selectedDevice.en_linea ? 'active' : 'inactive'">
+                <component :is="selectedDevice.en_linea ? CircleCheck : CircleX" class="ui-icon status-icon" aria-hidden="true" />
                 {{ selectedDevice.en_linea ? 'En línea' : 'Fuera de línea' }}
               </span>
-              <button v-if="!auth.isReadOnly" class="secondary-btn" type="button" @click="startEdit">✎ Editar</button>
-              <button class="secondary-btn" type="button" @click="selectedDevice = null">Cerrar</button>
+              <button v-if="!auth.isReadOnly" class="secondary-btn" type="button" @click="startEdit"><Pencil class="ui-icon" aria-hidden="true" />Editar</button>
+              <button class="secondary-btn" type="button" @click="selectedDevice = null"><XIcon class="ui-icon" aria-hidden="true" />Cerrar</button>
             </div>
           </div>
 
@@ -108,7 +110,7 @@
 
           <div class="device-summary">
             <div class="device-badge">
-              <span class="device-icon">▣</span>
+              <span class="device-icon"><Smartphone class="ui-icon" aria-hidden="true" /></span>
               <div>
                 <small>Equipo</small>
                 <strong>{{ selectedDevice.fabricante || 'Sin fabricante' }}</strong>
@@ -117,22 +119,22 @@
 
             <div class="summary-grid">
               <div class="summary-card battery">
-                <span class="summary-icon">◈</span>
+                <span class="summary-icon"><BatteryCharging class="ui-icon" aria-hidden="true" /></span>
                 <span class="metric-kicker">Batería</span>
                 <strong>{{ getBatteryText(selectedDevice.id) }}</strong>
               </div>
               <div class="summary-card ram">
-                <span class="summary-icon">▤</span>
+                <span class="summary-icon"><Cpu class="ui-icon" aria-hidden="true" /></span>
                 <span class="metric-kicker">RAM</span>
                 <strong>{{ getRamText(selectedDevice.id) }}</strong>
               </div>
               <div class="summary-card storage">
-                <span class="summary-icon">●</span>
+                <span class="summary-icon"><HardDrive class="ui-icon" aria-hidden="true" /></span>
                 <span class="metric-kicker">Espacio libre</span>
                 <strong>{{ getStorageText(selectedDevice.id) }}</strong>
               </div>
               <div class="summary-card network">
-                <span class="summary-icon">⌁</span>
+                <span class="summary-icon"><Wifi class="ui-icon" aria-hidden="true" /></span>
                 <span class="metric-kicker">Conexión</span>
                 <strong>{{ getNetworkText(selectedDevice.id) }}</strong>
               </div>
@@ -140,14 +142,14 @@
           </div>
 
           <div class="detail-grid">
-            <div class="detail-item"><span class="detail-icon">♧</span><span>Fabricante</span><strong>{{ selectedDevice.fabricante || 'No disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">♟</span><span>Android</span><strong>{{ selectedDevice.version_android || 'No disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">&lt;/&gt;</span><span>SDK</span><strong>{{ selectedDevice.android_sdk || 'No disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">▥</span><span>Número de serie</span><strong>{{ selectedDevice.serial || 'Restringido / no disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">▯</span><span>IMEI 1</span><strong>{{ selectedDevice.imei_1 || 'Restringido / no disponible' }}</strong></div>
-            <div class="detail-item status-detail"><span class="detail-icon">✓</span><span>Estado</span><strong :class="selectedDevice.en_linea ? 'active-text' : 'inactive-text'">{{ selectedDevice.en_linea ? 'Activo' : 'Inactivo' }}</strong></div>
-            <div class="detail-item uuid-detail"><span class="detail-icon">◎</span><span>UUID</span><strong class="uuid">{{ selectedDevice.device_uuid || 'No disponible' }}</strong></div>
-            <div class="detail-item"><span class="detail-icon">⌖</span><span>Ubicación</span><strong>{{ formatLocation(selectedDevice) }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Factory class="ui-icon" aria-hidden="true" /></span><span>Fabricante</span><strong>{{ selectedDevice.fabricante || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Smartphone class="ui-icon" aria-hidden="true" /></span><span>Android</span><strong>{{ selectedDevice.version_android || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><Code2 class="ui-icon" aria-hidden="true" /></span><span>SDK</span><strong>{{ selectedDevice.android_sdk || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><ScanLine class="ui-icon" aria-hidden="true" /></span><span>Número de serie</span><strong>{{ selectedDevice.serial || 'Restringido / no disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><ScanBarcode class="ui-icon" aria-hidden="true" /></span><span>IMEI 1</span><strong>{{ selectedDevice.imei_1 || 'Restringido / no disponible' }}</strong></div>
+            <div class="detail-item status-detail"><span class="detail-icon"><component :is="selectedDevice.en_linea ? CircleCheck : CircleX" class="ui-icon" aria-hidden="true" /></span><span>Estado</span><strong :class="selectedDevice.en_linea ? 'active-text' : 'inactive-text'">{{ selectedDevice.en_linea ? 'Activo' : 'Inactivo' }}</strong></div>
+            <div class="detail-item uuid-detail"><span class="detail-icon"><Fingerprint class="ui-icon" aria-hidden="true" /></span><span>UUID</span><strong class="uuid">{{ selectedDevice.device_uuid || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon"><MapPin class="ui-icon" aria-hidden="true" /></span><span>Ubicación</span><strong>{{ formatLocation(selectedDevice) }}</strong></div>
           </div>
 
         </template>
@@ -163,7 +165,7 @@
       <form class="edit-modal" @submit.prevent="saveEdit">
         <div class="modal-heading">
           <div><p class="eyebrow">Editar dispositivo</p><h3>{{ editForm.modelo || editForm.device_uuid || 'Dispositivo' }}</h3></div>
-          <button type="button" class="modal-close" aria-label="Cerrar" @click="editingDevice = false">×</button>
+          <button type="button" class="modal-close" aria-label="Cerrar" @click="editingDevice = false"><XIcon class="ui-icon" aria-hidden="true" /></button>
         </div>
 
         <label>IMEI 1<input v-model="editForm.imei_1" type="text" /></label>
@@ -180,6 +182,7 @@
 
 <script setup>
 import { computed, onActivated, onBeforeUnmount, onDeactivated, reactive, ref } from 'vue';
+import { BatteryCharging, ChevronRight, CircleCheck, CircleX, Code2, Cpu, Factory, Fingerprint, HardDrive, MapPin, Pencil, ScanBarcode, ScanLine, Smartphone, Trash2, TriangleAlert, Wifi, X as XIcon } from '@lucide/vue';
 import api from '../services/api';
 import { useAuthStore } from '../stores/auth';
 
@@ -1270,10 +1273,8 @@ h2 {
 .device-title-wrap h3 { font-size: 1.2rem; }
 .item-info strong { color: #121A2B; }
 .item-info small { color: #5B6B82; }
-.row-actions .detail-btn { font-size: 0; width: 30px; padding: 8px 0; background: #E6F6EC; }
-.row-actions .detail-btn::after { content: '›'; font-size: 1.2rem; line-height: 1; }
-.row-actions .revoke-btn { font-size: 0; width: 30px; padding: 8px 0; background: #fff0ee; }
-.row-actions .revoke-btn::after { content: '×'; font-size: 1.1rem; line-height: 1; }
+.row-actions .detail-btn { display: grid; place-items: center; font-size: 0; width: 30px; padding: 8px 0; background: #E6F6EC; }
+.row-actions .revoke-btn { display: grid; place-items: center; font-size: 0; width: 30px; padding: 8px 0; background: #fff0ee; }
 .summary-card { min-height: 62px; }
 .summary-card.battery { background: #fff8e8; }
 .summary-card.ram { background: #f1f8fc; }
@@ -1301,6 +1302,14 @@ h2 {
 .detail-item span.detail-icon { color: #5B6B82; font-size: 1.25rem; font-weight: 700; }
 .status-detail span.detail-icon { color: #078858; }
 .uuid-detail span.detail-icon { color: #5B6B82; }
+.ui-icon { width: 20px; height: 20px; stroke-width: 1.8; flex: 0 0 auto; }
+.row-actions .ui-icon { width: 16px; height: 16px; }
+.status-badge, .live-status { display: inline-flex; align-items: center; gap: 5px; }
+.status-icon { width: 15px; height: 15px; }
+.sim-churn { display: inline-flex; align-items: center; gap: 4px; }
+.inline-icon { width: 15px; height: 15px; }
+.secondary-btn { display: inline-flex; align-items: center; gap: 6px; }
+.modal-close { display: grid; place-items: center; }
 .apps-mini-box { margin-top: 14px; padding: 14px; background: #F4F6FA; }
 .apps-mini-header h4 { font-size: 0.92rem; }
 
