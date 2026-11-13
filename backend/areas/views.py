@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 
 from dispositivos.models import Dispositivo
 
@@ -13,10 +14,15 @@ class ProcesoListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [RolePermission]
 
 
-class ProcesoDetailAPIView(generics.RetrieveUpdateAPIView):
+class ProcesoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Proceso.objects.all()
     serializer_class = ProcesoSerializer
     permission_classes = [RolePermission]
+
+    def perform_destroy(self, instance):
+        if instance.divisiones.exists() or instance.zonas.exists():
+            raise ValidationError('Primero elimina las divisiones y relaciones de esta distribución.')
+        instance.delete()
 
 
 class SubprocesoListCreateAPIView(generics.ListCreateAPIView):
@@ -25,10 +31,15 @@ class SubprocesoListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [RolePermission]
 
 
-class SubprocesoDetailAPIView(generics.RetrieveUpdateAPIView):
+class SubprocesoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Subproceso.objects.select_related('proceso').all()
     serializer_class = SubprocesoSerializer
     permission_classes = [RolePermission]
+
+    def perform_destroy(self, instance):
+        if instance.zonas.exists():
+            raise ValidationError('Primero elimina las zonas de esta división.')
+        instance.delete()
 
 
 class AreaListAPIView(generics.ListCreateAPIView):
@@ -37,10 +48,21 @@ class AreaListAPIView(generics.ListCreateAPIView):
     permission_classes = [RolePermission]
 
 
-class AreaDetailAPIView(generics.RetrieveUpdateAPIView):
+class AreaDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Area.objects.select_related('subproceso', 'subproceso__proceso').all()
     serializer_class = AreaSerializer
     permission_classes = [RolePermission]
+
+    def perform_destroy(self, instance):
+        if (
+            instance.dispositivos.exists()
+            or instance.trabajadores.exists()
+            or instance.procesos_zona.exists()
+        ):
+            raise ValidationError(
+                'No se puede eliminar: primero quita las terminales, trabajadores y relaciones asignadas a esta zona.'
+            )
+        instance.delete()
 
 
 class ZonaDispositivoListAPIView(generics.ListAPIView):

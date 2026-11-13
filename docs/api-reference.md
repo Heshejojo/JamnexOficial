@@ -142,9 +142,9 @@ Ruta administrativa para invalidar la credencial de un dispositivo.
 
 | Recurso | Rutas |
 |---|---|
-| Distribuciones | `GET/POST /api/procesos/`, `GET/PATCH /api/procesos/<id>/` |
-| Divisiones | `GET/POST /api/subprocesos/`, `GET/PATCH /api/subprocesos/<id>/` |
-| Zonas | `GET/POST /api/areas/`, `GET/PATCH /api/areas/<id>/` |
+| Distribuciones | `GET/POST /api/procesos/`, `GET/PATCH/DELETE /api/procesos/<id>/` |
+| Divisiones | `GET/POST /api/subprocesos/`, `GET/PATCH/DELETE /api/subprocesos/<id>/` |
+| Zonas | `GET/POST /api/areas/`, `GET/PATCH/DELETE /api/areas/<id>/` |
 | Terminales por zona | `GET /api/zonas/dispositivos/`, `GET/PATCH /api/zonas/dispositivos/<id>/` |
 | Trabajadores | `GET/POST /api/trabajadores/`, `GET/PUT/DELETE /api/trabajadores/<id>/` |
 | Dispositivos | `GET/POST /api/dispositivos/`, `GET/PUT/PATCH/DELETE /api/dispositivos/<id>/` |
@@ -159,6 +159,9 @@ Una división recibe `proceso_id`; una zona recibe `subproceso_id`. Para asignar
 o quitar una terminal de una zona, envía `PATCH` a
 `/api/zonas/dispositivos/<id>/` con `{"area_id": <id>}` o `{"area_id": null}`.
 La lectura de este catálogo y las asignaciones requieren el permiso `zonas`.
+La eliminación de una distribución o división se rechaza mientras tenga
+elementos dependientes; una zona no se elimina mientras tenga terminales,
+trabajadores o relaciones asociadas.
 
 ## Operaciones de SIM
 

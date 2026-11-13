@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from areas.models import Area
+from areas.models import Area, Proceso, Subproceso
 from dispositivos.models import Dispositivo
 from usuarios.models import Rol, Usuario
 
@@ -214,6 +214,25 @@ class ZoneCatalogApiTest(TestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_empty_zone_can_be_deleted_but_assigned_zone_cannot(self):
+        process = Proceso.objects.create(nombre='Distribución para borrar')
+        division = Subproceso.objects.create(nombre='División para borrar', proceso=process)
+        zone = Area.objects.create(nombre='Zona para borrar', subproceso=division)
+        device = Dispositivo.objects.create(
+            device_uuid='assigned-zone-delete-device',
+            area=zone,
+        )
+
+        response = self.client.delete(f'/api/areas/{zone.pk}/')
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(Area.objects.filter(pk=zone.pk).exists())
+
+        device.area = None
+        device.save(update_fields=['area'])
+        response = self.client.delete(f'/api/areas/{zone.pk}/')
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Area.objects.filter(pk=zone.pk).exists())
 
 
 class TrabajadorCrudApiTest(TestCase):
