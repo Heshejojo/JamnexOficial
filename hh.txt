@@ -1,1 +1,18 @@
-mañana hacer lo de zonas y bd
+joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ npm install lucide-vue-next
+npm warn deprecated lucide-vue-next@1.0.0: Package deprecated. Please use @lucide/vue instead.
+
+added 2 packages, and audited 66 packages in 10s
+
+15 packages are looking for funding
+  run `npm fund` for details
+
+4 vulnerabilities (1 moderate, 3 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+joseluis@debianpostgresdlspiloto:~/JamnexCFE/frontend$ 
