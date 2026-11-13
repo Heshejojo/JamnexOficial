@@ -380,12 +380,20 @@ async function saveCatalog() {
     const createdId = response.data.id;
     const type = editingCatalog.value;
     const savedName = payload.nombre;
-    closeCatalog();
+    const wasEditing = Boolean(editingId.value);
+    if (wasEditing) {
+      editingCatalog.value = '';
+      editingId.value = null;
+    } else {
+      catalogForm.nombre = '';
+      catalogForm.descripcion = '';
+    }
+    modalError.value = '';
     await loadData();
     if (type === 'proceso') selectProcess(processes.value.find((item) => item.id === createdId));
     if (type === 'subproceso') selectSubproceso(subprocesos.value.find((item) => item.id === createdId));
     if (type === 'area') selectArea(areas.value.find((item) => item.id === createdId));
-    actionSuccess.value = `${catalogLabel(type)} "${savedName}" guardada y visible en la lista.`;
+    actionSuccess.value = `${catalogLabel(type)} "${savedName}" ${wasEditing ? 'actualizada' : 'guardada'}.`;
   } catch (error) {
     console.error('Error guardando elemento del catálogo:', error.response?.data || error);
     modalError.value = error.response?.data?.nombre?.[0]
