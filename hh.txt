@@ -1,4 +1,1 @@
-(venv) joseluis@debianpostgresdlspiloto:~/JamnexCFE/backend$ grep -n "ADMIN o CONSULTA" usuarios/serializers.py
-48:            raise serializers.ValidationError('Solo se permite el rol ADMIN o CONSULTA.')
-62:            raise serializers.ValidationError({'rol_id': 'No existe un rol ADMIN o CONSULTA activo.'})
-(venv) joseluis@debianpostgresdlspiloto:~/JamnexCFE/backend$ 
+mañana hacer lo de zonas y bd

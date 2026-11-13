@@ -30,6 +30,7 @@
             <div class="item-info">
               <strong>{{ item.modelo || item.device_uuid }}</strong>
               <small>{{ item.fabricante || 'Sin info' }} · {{ item.serial || 'Sin número de serie' }}</small>
+              <small>Ubicación: {{ formatLocation(item) }}</small>
               <small
                 class="sim-report-status"
                 :class="{ missing: item.simCount === 0, unknown: item.simCount === null, stale: isReportStale(item) }"
@@ -146,6 +147,7 @@
             <div class="detail-item"><span class="detail-icon">▯</span><span>IMEI 1</span><strong>{{ selectedDevice.imei_1 || 'Restringido / no disponible' }}</strong></div>
             <div class="detail-item status-detail"><span class="detail-icon">✓</span><span>Estado</span><strong :class="selectedDevice.en_linea ? 'active-text' : 'inactive-text'">{{ selectedDevice.en_linea ? 'Activo' : 'Inactivo' }}</strong></div>
             <div class="detail-item uuid-detail"><span class="detail-icon">◎</span><span>UUID</span><strong class="uuid">{{ selectedDevice.device_uuid || 'No disponible' }}</strong></div>
+            <div class="detail-item"><span class="detail-icon">⌖</span><span>Ubicación</span><strong>{{ formatLocation(selectedDevice) }}</strong></div>
           </div>
 
         </template>
@@ -207,6 +209,13 @@ function formatDate(dateString) {
   if (!dateString) return 'Sin contacto';
   const date = new Date(dateString);
   return date.toLocaleString('es-ES');
+}
+
+function formatLocation(device) {
+  if (!device.zona_nombre) return 'Sin asignar';
+  return [device.distribucion_nombre, device.division_nombre, device.zona_nombre]
+    .filter(Boolean)
+    .join(' › ');
 }
 
 function formatMegabytes(value) {

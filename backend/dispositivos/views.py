@@ -494,7 +494,11 @@ def dispositivos_queryset():
     queda registrada, asi que un equipo que cambia mucho de SIM se nota.
     """
     cutoff = timezone.now() - timedelta(days=30)
-    return Dispositivo.objects.annotate(
+    return Dispositivo.objects.select_related(
+        'area',
+        'area__subproceso',
+        'area__subproceso__proceso',
+    ).annotate(
         sims_distintas_30d=Count(
             'historial_sims__sim',
             filter=Q(historial_sims__hasta__isnull=True) | Q(historial_sims__hasta__gte=cutoff),

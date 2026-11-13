@@ -1,13 +1,32 @@
 from django.db import models
+from django.db.models import Q
 
 
 class Area(models.Model):
-    nombre = models.CharField(max_length=120, unique=True)
+    nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True)
     activo = models.BooleanField(default=True)
+    subproceso = models.ForeignKey(
+        'Subproceso',
+        on_delete=models.PROTECT,
+        related_name='zonas',
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = 'areas'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['subproceso', 'nombre'],
+                name='uq_zona_subproceso_nombre',
+            ),
+            models.UniqueConstraint(
+                fields=['nombre'],
+                condition=Q(subproceso__isnull=True),
+                name='uq_area_sin_division_nombre',
+            ),
+        ]
 
     def __str__(self):
         return self.nombre
@@ -47,10 +66,10 @@ class ProcesoZona(models.Model):
 
 
 class Subproceso(models.Model):
-    proceso_zona = models.ForeignKey(
-        ProcesoZona,
+    proceso = models.ForeignKey(
+        Proceso,
         on_delete=models.CASCADE,
-        related_name='subprocesos',
+        related_name='divisiones',
     )
     nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True)
@@ -60,8 +79,8 @@ class Subproceso(models.Model):
         db_table = 'subprocesos'
         constraints = [
             models.UniqueConstraint(
-                fields=['proceso_zona', 'nombre'],
-                name='uq_subproceso_proceso_zona_nombre',
+                fields=['proceso', 'nombre'],
+                name='uq_division_proceso_nombre',
             ),
         ]
 

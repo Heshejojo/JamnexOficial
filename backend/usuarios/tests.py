@@ -133,6 +133,88 @@ class ConsultaRolePermissionsTest(TestCase):
         self.assertEqual(created_user.rol.nombre, 'CONSULTA')
         self.assertTrue(created_user.permisos['zonas'])
 
+    def test_consulta_cannot_assign_device_zone(self):
+        device = Dispositivo.objects.create(device_uuid='readonly-zone-device')
+        response = self.client.patch(
+            f'/api/zonas/dispositivos/{device.pk}/',
+            {'area_id': None},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+class ZoneCatalogApiTest(TestCase):
+    def setUp(self):
+        self.user = Usuario.objects.create_user(
+            username='zone-admin',
+            email='zone-admin@example.com',
+            password='test-password',
+            rol=Rol.objects.get(nombre='ADMIN'),
+            permisos={
+                'dashboard': True,
+                'dispositivos': True,
+                'sims': True,
+                'usuarios': True,
+                'zonas': True,
+            },
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_hierarchy_and_assign_terminal_from_zones(self):
+        distribution_response = self.client.post(
+            '/api/procesos/',
+            {'nombre': 'Distribución Norte'},
+            format='json',
+        )
+        self.assertEqual(distribution_response.status_code, 201)
+        distribution_id = distribution_response.data['id']
+
+        division_response = self.client.post(
+            '/api/subprocesos/',
+            {'nombre': 'División 1', 'proceso_id': distribution_id},
+            format='json',
+        )
+        self.assertEqual(division_response.status_code, 201)
+
+        zone_response = self.client.post(
+            '/api/areas/',
+            {'nombre': 'Zona A', 'subproceso_id': division_response.data['id']},
+            format='json',
+        )
+        self.assertEqual(zone_response.status_code, 201)
+
+        device = Dispositivo.objects.create(device_uuid='zone-assignment-device')
+        assignment_response = self.client.patch(
+            f'/api/zonas/dispositivos/{device.pk}/',
+            {'area_id': zone_response.data['id']},
+            format='json',
+        )
+        self.assertEqual(assignment_response.status_code, 200)
+        self.assertEqual(assignment_response.data['zona_nombre'], 'Zona A')
+        self.assertEqual(assignment_response.data['division_nombre'], 'División 1')
+        self.assertEqual(assignment_response.data['distribucion_nombre'], 'Distribución Norte')
+
+        device.refresh_from_db()
+        self.assertEqual(device.area_id, zone_response.data['id'])
+
+    def test_zone_requires_existing_division_for_assignment(self):
+        response = self.client.post(
+            '/api/areas/',
+            {'nombre': 'Zona sin división'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 400)
+
+        legacy_area = Area.objects.create(nombre='Zona sin relación')
+        device = Dispositivo.objects.create(device_uuid='unassigned-zone-device')
+        response = self.client.patch(
+            f'/api/zonas/dispositivos/{device.pk}/',
+            {'area_id': legacy_area.pk},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 400)
+
 
 class TrabajadorCrudApiTest(TestCase):
     def setUp(self):

@@ -27,6 +27,7 @@ class TrabajadorSerializer(serializers.ModelSerializer):
         if attrs.get('area') is None:
             area, _ = Area.objects.get_or_create(
                 nombre='General',
+                subproceso=None,
                 defaults={'descripcion': 'Área por defecto del sistema', 'activo': True},
             )
             attrs['area'] = area

@@ -40,6 +40,8 @@ class RolePermission(BasePermission):
             'consumos': 'sims',
             'usuarios': 'usuarios',
             'roles': 'usuarios',
+            'procesos': 'zonas',
+            'subprocesos': 'zonas',
             'areas': 'zonas',
             'zonas': 'zonas',
         }.get(section, section)

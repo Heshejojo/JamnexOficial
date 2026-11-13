@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
+from areas.models import Area
 from trabajadores.models import Trabajador
 
 
@@ -21,6 +22,13 @@ class Dispositivo(models.Model):
     ultimo_contacto = models.DateTimeField(null=True, blank=True)
     sim_count_reported = models.PositiveSmallIntegerField(null=True, blank=True)
     sims_reported_at = models.DateTimeField(null=True, blank=True)
+    area = models.ForeignKey(
+        Area,
+        on_delete=models.SET_NULL,
+        related_name='dispositivos',
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

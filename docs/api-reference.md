@@ -142,7 +142,10 @@ Ruta administrativa para invalidar la credencial de un dispositivo.
 
 | Recurso | Rutas |
 |---|---|
-| Áreas | `GET/POST /api/areas/`, `GET/PUT/DELETE /api/areas/<id>/` |
+| Distribuciones | `GET/POST /api/procesos/`, `GET/PATCH /api/procesos/<id>/` |
+| Divisiones | `GET/POST /api/subprocesos/`, `GET/PATCH /api/subprocesos/<id>/` |
+| Zonas | `GET/POST /api/areas/`, `GET/PATCH /api/areas/<id>/` |
+| Terminales por zona | `GET /api/zonas/dispositivos/`, `GET/PATCH /api/zonas/dispositivos/<id>/` |
 | Trabajadores | `GET/POST /api/trabajadores/`, `GET/PUT/DELETE /api/trabajadores/<id>/` |
 | Dispositivos | `GET/POST /api/dispositivos/`, `GET/PUT/PATCH/DELETE /api/dispositivos/<id>/` |
 | SIMs | `GET/POST /api/sims/`, `GET/PUT/PATCH/DELETE /api/sims/<id>/` |
@@ -151,6 +154,11 @@ Ruta administrativa para invalidar la credencial de un dispositivo.
 | Batería | `GET/POST /api/bateria/`, `GET/PUT/DELETE /api/bateria/<id>/` |
 | RAM | `GET/POST /api/ram/`, `GET/PUT/DELETE /api/ram/<id>/` |
 | Almacenamiento | `GET/POST /api/almacenamiento/`, `GET/PUT/DELETE /api/almacenamiento/<id>/` |
+
+Una división recibe `proceso_id`; una zona recibe `subproceso_id`. Para asignar
+o quitar una terminal de una zona, envía `PATCH` a
+`/api/zonas/dispositivos/<id>/` con `{"area_id": <id>}` o `{"area_id": null}`.
+La lectura de este catálogo y las asignaciones requieren el permiso `zonas`.
 
 ## Operaciones de SIM
 

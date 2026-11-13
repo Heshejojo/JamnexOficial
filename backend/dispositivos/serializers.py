@@ -6,6 +6,9 @@ from .models import AsignacionDispositivo, Dispositivo
 class DispositivoSerializer(serializers.ModelSerializer):
     en_linea = serializers.BooleanField(source='esta_activo', read_only=True)
     sims_distintas_30d = serializers.IntegerField(read_only=True, default=0)
+    zona_nombre = serializers.CharField(source='area.nombre', read_only=True, allow_null=True)
+    division_nombre = serializers.CharField(source='area.subproceso.nombre', read_only=True, allow_null=True)
+    distribucion_nombre = serializers.CharField(source='area.subproceso.proceso.nombre', read_only=True, allow_null=True)
 
     class Meta:
         model = Dispositivo
@@ -13,7 +16,8 @@ class DispositivoSerializer(serializers.ModelSerializer):
             'id', 'device_uuid', 'fabricante', 'modelo', 'version_android', 'android_sdk',
             'serial', 'imei_1', 'imei_2', 'ram_total', 'almacenamiento_total',
             'activo', 'en_linea', 'ultimo_contacto', 'sim_count_reported',
-            'sims_reported_at', 'sims_distintas_30d', 'created_at', 'updated_at'
+            'sims_reported_at', 'sims_distintas_30d', 'zona_nombre',
+            'division_nombre', 'distribucion_nombre', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'sim_count_reported', 'sims_reported_at', 'created_at', 'updated_at',
