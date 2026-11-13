@@ -14,19 +14,19 @@
       <div class="nav-label">Módulos principales</div>
       <nav class="nav-menu">
         <router-link v-if="can('dashboard')" to="/" class="nav-item" exact-active-class="active">
-          <span aria-hidden="true">⌂</span>Dashboard
+          <LayoutDashboard class="nav-icon" aria-hidden="true" />Dashboard
         </router-link>
         <router-link v-if="can('dispositivos')" to="/dispositivos" class="nav-item" exact-active-class="active">
-          <span aria-hidden="true">▣</span>Dispositivos
+          <Smartphone class="nav-icon" aria-hidden="true" />Dispositivos
         </router-link>
         <router-link v-if="can('sims')" to="/sims" class="nav-item" exact-active-class="active">
-          <span aria-hidden="true">▤</span>SIMs
+          <CreditCard class="nav-icon" aria-hidden="true" />SIMs
         </router-link>
         <router-link v-if="can('zonas')" to="/zonas" class="nav-item" exact-active-class="active">
-          <span aria-hidden="true">⌖</span>Zonas
+          <MapPin class="nav-icon" aria-hidden="true" />Zonas
         </router-link>
         <router-link v-if="can('usuarios')" to="/usuarios" class="nav-item" exact-active-class="active">
-          <span aria-hidden="true">♙</span>Usuarios
+          <Users class="nav-icon" aria-hidden="true" />Usuarios
         </router-link>
       </nav>
 
@@ -63,6 +63,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { CreditCard, LayoutDashboard, MapPin, Smartphone, Users } from 'lucide-vue-next';
 import { useAuthStore } from './stores/auth';
 
 const auth = useAuthStore();
@@ -224,11 +225,12 @@ function logoutSession() {
   transition: transform 0.18s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.nav-item span {
-  width: 22px;
-  color: #b7e4d4;
-  font-size: 1.15rem;
-  text-align: center;
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  color: currentColor;
+  stroke-width: 1.8;
 }
 
 .nav-item:hover,
@@ -375,7 +377,6 @@ function logoutSession() {
     white-space: nowrap;
   }
 
-  .nav-item span { display: inline-block; }
   .sidebar-footer { display: none; }
   .main-panel { padding: 10px; }
 }
