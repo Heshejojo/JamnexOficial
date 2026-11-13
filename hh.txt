@@ -1,1 +1,2 @@
-mañana hacer lo de zonas y bd
+GRANT USAGE ON SCHEMA public TO adminpostgre;
+GRANT SELECT ON TABLE public.procesos TO adminpostgre;
