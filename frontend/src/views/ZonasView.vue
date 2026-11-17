@@ -32,7 +32,7 @@
           :class="{ selected: selectedProcess?.id === process.id, inactive: !process.activo }"
         >
           <button class="catalog-select" type="button" @click="selectProcess(process)">
-            <span class="catalog-copy"><strong>{{ process.nombre }}</strong><small>{{ process.activo ? 'Activa' : 'Inactiva' }}</small></span>
+            <span class="catalog-copy"><strong>{{ process.nombre }}</strong><small class="catalog-status" :class="process.activo ? 'active' : 'inactive'">{{ process.activo ? 'Activa' : 'Inactiva' }}</small></span>
             <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
@@ -63,7 +63,7 @@
           :class="{ selected: selectedSubproceso?.id === division.id, inactive: !division.activo }"
         >
           <button class="catalog-select" type="button" @click="selectSubproceso(division)">
-            <span class="catalog-copy"><strong>{{ division.nombre }}</strong><small>{{ division.activo ? 'Activa' : 'Inactiva' }}</small></span>
+            <span class="catalog-copy"><strong>{{ division.nombre }}</strong><small class="catalog-status" :class="division.activo ? 'active' : 'inactive'">{{ division.activo ? 'Activa' : 'Inactiva' }}</small></span>
             <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
@@ -94,7 +94,7 @@
           :class="{ selected: selectedArea?.id === area.id, inactive: !area.activo }"
         >
           <button class="catalog-select" type="button" @click="selectArea(area)">
-            <span class="catalog-copy"><strong>{{ area.nombre }}</strong><small>{{ deviceCount(area.id) }} terminales · {{ area.activo ? 'Activa' : 'Inactiva' }}</small></span>
+            <span class="catalog-copy"><strong>{{ area.nombre }}</strong><small class="catalog-status" :class="area.activo ? 'active' : 'inactive'">{{ deviceCount(area.id) }} terminales · {{ area.activo ? 'Activa' : 'Inactiva' }}</small></span>
             <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
@@ -533,4 +533,80 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .assignment-list { display: grid; max-height: 45vh; overflow-y: auto; gap: 6px; }.assignment-row { display: flex; align-items: center; gap: 10px; padding: 9px; border: 1px solid #E5EAF1; border-radius: 7px; cursor: pointer; }.assignment-row input { flex: 0 0 auto; accent-color: #1E9B48; }.assignment-row .device-copy { flex: 1; }
 @media(max-width:1000px) { .hierarchy-grid { grid-template-columns: 1fr 1fr; }.hierarchy-card:last-child { grid-column: 1 / -1; } }
 @media(max-width:680px) { .zones-page { padding: 15px 11px; }.page-header,.devices-heading { align-items: flex-start; flex-direction: column; }.hierarchy-grid { grid-template-columns: 1fr; }.hierarchy-card:last-child { grid-column: auto; }.topbar-actions { width: 100%; justify-content: space-between; }.device-row { flex-wrap: wrap; }.device-copy { min-width: calc(100% - 60px); }.device-status { margin-left: 48px; }.link-button { margin-left: auto; }.catalog-modal { padding: 16px; } }
+
+.zones-page { gap: 20px; padding: 28px; border: 0; border-radius: 16px; background: #F4F6FA; }
+.page-header { padding: 4px 2px 20px; border-color: #DCE3EE; }
+.page-header h2 { font-size: clamp(1.7rem, 3vw, 2.2rem); letter-spacing: -.035em; }
+.page-caption { font-size: .88rem; }
+.topbar-actions { gap: 10px; }
+.sync-state { min-height: 38px; padding: 8px 12px; border-radius: 9px; background: #fff; }
+.primary-btn, .secondary-btn { min-height: 40px; border-radius: 9px; transition: background .18s ease, box-shadow .18s ease, transform .18s ease; }
+.primary-btn { padding: 10px 15px; box-shadow: 0 4px 10px rgba(30,155,72,.16); }
+.primary-btn:hover:not(:disabled) { box-shadow: 0 6px 14px rgba(30,155,72,.22); transform: translateY(-1px); }
+.hierarchy-grid { gap: 16px; }
+.hierarchy-card, .devices-panel { padding: 18px; border-color: #E1E7EF; border-radius: 14px; box-shadow: 0 5px 18px rgba(24,39,75,.045); transition: border-color .2s ease, box-shadow .2s ease; }
+.hierarchy-card:hover, .devices-panel:hover { border-color: #D2DFD7; box-shadow: 0 8px 24px rgba(24,39,75,.07); }
+.card-heading { min-height: 56px; margin: -2px 0 12px; padding-bottom: 13px; border-bottom: 1px solid #EEF1F5; }
+.step-number { width: 36px; height: 36px; border: 1px solid #CDEAD5; border-radius: 11px; color: #167A39; background: linear-gradient(145deg, #F0FAF3, #E2F5E8); font-size: .86rem; box-shadow: inset 0 1px 0 rgba(255,255,255,.8); }
+.card-heading h3 { font-size: 1.04rem; letter-spacing: -.015em; }
+.card-heading small { max-width: 220px; color: #738096; font-size: .73rem; }
+.add-btn { min-height: 35px; padding: 8px 11px; border-color: #D5EBDD; border-radius: 8px; background: #F4FBF6; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+.add-btn:hover:not(:disabled) { border-color: #9FD3AD; background: #EAF7EE; transform: translateY(-1px); }
+.catalog-row { min-height: 58px; gap: 6px; margin-top: 8px; padding: 8px 9px 8px 12px; border-color: #E9EDF2; border-radius: 10px; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+.catalog-row:hover { border-color: #C7DCCB; background: #FBFEFC; }
+.catalog-row.selected { border-color: #8BC99A; background: linear-gradient(100deg, #F0FAF3, #FBFEFC); box-shadow: inset 3px 0 0 #1E9B48; }
+.catalog-row.inactive { opacity: .68; }
+.catalog-select { min-height: 38px; padding: 3px 0; }
+.catalog-copy { gap: 6px; }
+.catalog-copy strong { font-size: .86rem; letter-spacing: -.01em; }
+.catalog-copy small.catalog-status { width: fit-content; max-width: 100%; padding: 3px 7px; border-radius: 999px; font-size: .65rem; line-height: 1.2; text-overflow: ellipsis; }
+.catalog-status.active { color: #167A39; background: #EAF7EE; }
+.catalog-status.inactive { color: #8A5360; background: #F8EDEF; }
+.chevron { width: 16px; height: 16px; color: #A0AAB8; transition: color .18s ease, transform .18s ease; }
+.catalog-row:hover .chevron, .catalog-row.selected .chevron { color: #1E9B48; transform: translateX(2px); }
+.row-tools { gap: 2px; padding-left: 5px; border-left: 1px solid #EEF1F5; }
+.row-tools button { width: 30px; height: 30px; border-radius: 8px; transition: color .18s ease, background .18s ease; }
+.row-tools button:focus-visible, .catalog-select:focus-visible, .add-btn:focus-visible, .primary-btn:focus-visible, .link-button:focus-visible { outline: 3px solid rgba(30,155,72,.24); outline-offset: 2px; }
+.empty-state { min-height: 118px; border: 1px dashed #DCE3EE; border-radius: 10px; background: #FAFBFD; line-height: 1.55; }
+.devices-panel { padding: 20px; }
+.devices-heading { margin-bottom: 16px; padding-bottom: 15px; border-bottom: 1px solid #EEF1F5; }
+.devices-heading h3 { font-size: 1.12rem; letter-spacing: -.02em; }
+.panel-caption { font-size: .78rem; }
+.device-row { min-height: 66px; padding: 11px 13px; border-color: #E8EDF2; border-radius: 10px; background: #FBFCFE; transition: border-color .18s ease, background .18s ease; }
+.device-row:hover { border-color: #C8DDCD; background: #F7FBF8; }
+.device-avatar { width: 40px; height: 40px; border-radius: 11px; }
+.device-copy strong { font-size: .87rem; }
+.device-copy small { font-size: .72rem; }
+.device-status { padding: 6px 9px; border-radius: 999px; background: #F0F3F7; }
+.device-status.online { background: #EAF7EE; }
+.link-button { padding: 8px 10px; border-radius: 7px; transition: background .18s ease; }
+.link-button:hover:not(:disabled) { background: #EAF7EE; }
+.modal-backdrop { backdrop-filter: blur(3px); }
+.catalog-modal { padding: 24px; border-radius: 16px; }
+.modal-heading h3 { font-size: 1.25rem; letter-spacing: -.02em; }
+.catalog-modal input:not([type=checkbox]), .catalog-modal textarea { border-radius: 9px; }
+
+@media(max-width:1000px) {
+  .zones-page { padding: 22px; }
+  .hierarchy-grid { gap: 12px; }
+  .hierarchy-card { padding: 15px; }
+}
+@media(max-width:680px) {
+  .zones-page { gap: 15px; padding: 16px 12px; border-radius: 12px; }
+  .page-header { padding: 2px 1px 15px; }
+  .sync-state { font-size: .7rem; }
+  .hierarchy-card, .devices-panel { padding: 14px; border-radius: 12px; }
+  .card-heading { gap: 7px; }
+  .card-heading small { max-width: 145px; }
+  .add-btn { padding: 8px; }
+  .catalog-row { padding-left: 9px; }
+  .row-tools { padding-left: 3px; }
+  .row-tools button { width: 28px; height: 28px; }
+  .devices-panel { padding: 15px; }
+  .devices-heading { gap: 12px; }
+  .devices-heading .primary-btn { width: 100%; justify-content: center; }
+  .device-row { gap: 9px; }
+  .device-status { margin-left: 0; }
+  .link-button { margin-left: 0; }
+}
 </style>
