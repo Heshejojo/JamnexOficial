@@ -37,7 +37,7 @@
           </button>
           <span class="row-tools">
             <button v-if="!auth.isReadOnly" type="button" title="Editar distribución" aria-label="Editar distribución" @click="openEdit('proceso', process)"><Pencil class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" type="button" :title="process.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('proceso', process)"><component :is="process.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :class="process.activo ? 'toggle-active' : 'toggle-inactive'" :title="process.activo ? 'Desactivar' : 'Activar'" :aria-label="`${process.activo ? 'Desactivar' : 'Activar'} distribución`" @click="toggleActive('proceso', process)"><component :is="process.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
             <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar distribución" aria-label="Eliminar distribución" @click="deleteCatalog('proceso', process)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
@@ -68,7 +68,7 @@
           </button>
           <span class="row-tools">
             <button v-if="!auth.isReadOnly" type="button" title="Editar división" aria-label="Editar división" @click="openEdit('subproceso', division)"><Pencil class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" type="button" :title="division.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('subproceso', division)"><component :is="division.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :class="division.activo ? 'toggle-active' : 'toggle-inactive'" :title="division.activo ? 'Desactivar' : 'Activar'" :aria-label="`${division.activo ? 'Desactivar' : 'Activar'} división`" @click="toggleActive('subproceso', division)"><component :is="division.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
             <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar división" aria-label="Eliminar división" @click="deleteCatalog('subproceso', division)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
@@ -94,12 +94,12 @@
           :class="{ selected: selectedArea?.id === area.id, inactive: !area.activo }"
         >
           <button class="catalog-select" type="button" @click="selectArea(area)">
-            <span class="catalog-copy"><strong>{{ area.nombre }}</strong><small class="catalog-status" :class="area.activo ? 'active' : 'inactive'">{{ deviceCount(area.id) }} terminales · {{ area.activo ? 'Activa' : 'Inactiva' }}</small></span>
+            <span class="catalog-copy"><strong>{{ area.nombre }}</strong><small class="catalog-status" :class="area.activo ? 'active' : 'inactive'">{{ deviceCount(area.id) }} {{ deviceCount(area.id) === 1 ? 'terminal' : 'terminales' }} · {{ area.activo ? 'Activa' : 'Inactiva' }}</small></span>
             <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
             <button v-if="!auth.isReadOnly" type="button" title="Editar zona" aria-label="Editar zona" @click="openEdit('area', area)"><Pencil class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" type="button" :title="area.activo ? 'Desactivar' : 'Activar'" @click="toggleActive('area', area)"><component :is="area.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :class="area.activo ? 'toggle-active' : 'toggle-inactive'" :title="area.activo ? 'Desactivar' : 'Activar'" :aria-label="`${area.activo ? 'Desactivar' : 'Activar'} zona`" @click="toggleActive('area', area)"><component :is="area.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
             <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar zona" aria-label="Eliminar zona" @click="deleteCatalog('area', area)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
@@ -566,6 +566,10 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .catalog-row:hover .chevron, .catalog-row.selected .chevron { color: #1E9B48; transform: translateX(2px); }
 .row-tools { gap: 2px; padding-left: 5px; border-left: 1px solid #EEF1F5; }
 .row-tools button { width: 30px; height: 30px; border-radius: 8px; transition: color .18s ease, background .18s ease; }
+.row-tools .toggle-active { color: #15803d; background: #EAF7EE; }
+.row-tools .toggle-active:hover { color: #166534; background: #D7F0DE; }
+.row-tools .toggle-inactive { color: #B7791F; background: #FFF6E5; }
+.row-tools .toggle-inactive:hover { color: #925F12; background: #FCECC8; }
 .row-tools button:focus-visible, .catalog-select:focus-visible, .add-btn:focus-visible, .primary-btn:focus-visible, .link-button:focus-visible { outline: 3px solid rgba(30,155,72,.24); outline-offset: 2px; }
 .empty-state { min-height: 118px; border: 1px dashed #DCE3EE; border-radius: 10px; background: #FAFBFD; line-height: 1.55; }
 .devices-panel { padding: 20px; }
