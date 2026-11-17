@@ -3,8 +3,8 @@
     <header class="page-header">
       <div>
         <p class="eyebrow">Organización territorial</p>
-        <h2>Zonas</h2>
-        <p class="page-caption">Administra distribuciones, divisiones y la ubicación de cada terminal.</p>
+        <h2>Ubicaciones</h2>
+        <p class="page-caption">Administra divisiones, zonas y departamentos para organizar tus terminales.</p>
       </div>
       <div class="topbar-actions">
         <span class="sync-state" :class="{ syncing: loading, failed: loadError }">
@@ -21,10 +21,10 @@
     <section class="hierarchy-grid" aria-label="Catálogo de ubicaciones">
       <article class="hierarchy-card">
         <div class="card-heading">
-          <div><span class="step-number">1</span><div><h3>Distribuciones</h3><small>{{ activeProcesses.length }} activas</small></div></div>
+          <div><span class="step-number">1</span><div><h3>Divisiones</h3><small>{{ activeProcesses.length }} activas</small></div></div>
           <button v-if="!auth.isReadOnly" class="add-btn" type="button" @click="openCreate('proceso')"><Plus class="ui-icon" aria-hidden="true" />Agregar</button>
         </div>
-        <div v-if="!processes.length" class="empty-state">Agrega la primera distribución para comenzar.</div>
+        <div v-if="!processes.length" class="empty-state">Agrega la primera división para comenzar.</div>
         <div
           v-for="process in processes"
           :key="process.id"
@@ -36,16 +36,16 @@
             <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
-            <button v-if="!auth.isReadOnly" type="button" title="Editar distribución" aria-label="Editar distribución" @click="openEdit('proceso', process)"><Pencil class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" type="button" :class="process.activo ? 'toggle-active' : 'toggle-inactive'" :title="process.activo ? 'Desactivar' : 'Activar'" :aria-label="`${process.activo ? 'Desactivar' : 'Activar'} distribución`" @click="toggleActive('proceso', process)"><component :is="process.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar distribución" aria-label="Eliminar distribución" @click="deleteCatalog('proceso', process)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" title="Editar división" aria-label="Editar división" @click="openEdit('proceso', process)"><Pencil class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :class="process.activo ? 'toggle-active' : 'toggle-inactive'" :title="process.activo ? 'Desactivar' : 'Activar'" :aria-label="`${process.activo ? 'Desactivar' : 'Activar'} división`" @click="toggleActive('proceso', process)"><component :is="process.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar división" aria-label="Eliminar división" @click="deleteCatalog('proceso', process)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
       </article>
 
       <article class="hierarchy-card" :class="{ 'waiting-card': !selectedProcess }">
         <div class="card-heading">
-          <div><span class="step-number">2</span><div><h3>Divisiones</h3><small>{{ selectedProcess?.nombre || 'Elige una distribución' }}</small></div></div>
+          <div><span class="step-number">2</span><div><h3>Zonas</h3><small>{{ selectedProcess?.nombre || 'Elige una división' }}</small></div></div>
           <button
             v-if="!auth.isReadOnly"
             class="add-btn"
@@ -54,8 +54,8 @@
             @click="openCreate('subproceso')"
           ><Plus class="ui-icon" aria-hidden="true" />Agregar</button>
         </div>
-        <div v-if="!selectedProcess" class="empty-state">Selecciona una distribución para ver sus divisiones.</div>
-        <div v-else-if="!visibleSubprocesos.length" class="empty-state">Todavía no hay divisiones en esta distribución.</div>
+        <div v-if="!selectedProcess" class="empty-state">Selecciona una división para ver sus zonas.</div>
+        <div v-else-if="!visibleSubprocesos.length" class="empty-state">Todavía no hay zonas en esta división.</div>
         <div
           v-for="division in visibleSubprocesos"
           :key="division.id"
@@ -67,16 +67,16 @@
             <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
-            <button v-if="!auth.isReadOnly" type="button" title="Editar división" aria-label="Editar división" @click="openEdit('subproceso', division)"><Pencil class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" type="button" :class="division.activo ? 'toggle-active' : 'toggle-inactive'" :title="division.activo ? 'Desactivar' : 'Activar'" :aria-label="`${division.activo ? 'Desactivar' : 'Activar'} división`" @click="toggleActive('subproceso', division)"><component :is="division.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar división" aria-label="Eliminar división" @click="deleteCatalog('subproceso', division)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" title="Editar zona" aria-label="Editar zona" @click="openEdit('subproceso', division)"><Pencil class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :class="division.activo ? 'toggle-active' : 'toggle-inactive'" :title="division.activo ? 'Desactivar' : 'Activar'" :aria-label="`${division.activo ? 'Desactivar' : 'Activar'} zona`" @click="toggleActive('subproceso', division)"><component :is="division.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar zona" aria-label="Eliminar zona" @click="deleteCatalog('subproceso', division)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
       </article>
 
       <article class="hierarchy-card" :class="{ 'waiting-card': !selectedSubproceso }">
         <div class="card-heading">
-          <div><span class="step-number">3</span><div><h3>Zonas</h3><small>{{ selectedSubproceso?.nombre || 'Elige una división' }}</small></div></div>
+          <div><span class="step-number">3</span><div><h3>Departamentos</h3><small>{{ selectedSubproceso?.nombre || 'Elige una zona' }}</small></div></div>
           <button
             v-if="!auth.isReadOnly"
             class="add-btn"
@@ -85,8 +85,8 @@
             @click="openCreate('area')"
           ><Plus class="ui-icon" aria-hidden="true" />Agregar</button>
         </div>
-        <div v-if="!selectedSubproceso" class="empty-state">Selecciona una división para ver sus zonas.</div>
-        <div v-else-if="!visibleAreas.length" class="empty-state">Todavía no hay zonas en esta división.</div>
+        <div v-if="!selectedSubproceso" class="empty-state">Selecciona una zona para ver sus departamentos.</div>
+        <div v-else-if="!visibleAreas.length" class="empty-state">Todavía no hay departamentos en esta zona.</div>
         <div
           v-for="area in visibleAreas"
           :key="area.id"
@@ -98,9 +98,9 @@
             <ChevronRight class="ui-icon chevron" aria-hidden="true" />
           </button>
           <span class="row-tools">
-            <button v-if="!auth.isReadOnly" type="button" title="Editar zona" aria-label="Editar zona" @click="openEdit('area', area)"><Pencil class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" type="button" :class="area.activo ? 'toggle-active' : 'toggle-inactive'" :title="area.activo ? 'Desactivar' : 'Activar'" :aria-label="`${area.activo ? 'Desactivar' : 'Activar'} zona`" @click="toggleActive('area', area)"><component :is="area.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
-            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar zona" aria-label="Eliminar zona" @click="deleteCatalog('area', area)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" title="Editar departamento" aria-label="Editar departamento" @click="openEdit('area', area)"><Pencil class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" type="button" :class="area.activo ? 'toggle-active' : 'toggle-inactive'" :title="area.activo ? 'Desactivar' : 'Activar'" :aria-label="`${area.activo ? 'Desactivar' : 'Activar'} departamento`" @click="toggleActive('area', area)"><component :is="area.activo ? ToggleRight : ToggleLeft" class="ui-icon" aria-hidden="true" /></button>
+            <button v-if="!auth.isReadOnly" class="delete-item" type="button" title="Eliminar departamento" aria-label="Eliminar departamento" @click="deleteCatalog('area', area)"><Trash2 class="ui-icon" aria-hidden="true" /></button>
           </span>
         </div>
       </article>
@@ -110,11 +110,11 @@
       <div class="devices-heading">
         <div>
           <p class="eyebrow">Asignación de terminales</p>
-          <h3>{{ selectedArea ? `Terminales en ${selectedArea.nombre}` : 'Selecciona una zona' }}</h3>
+          <h3>{{ selectedArea ? `Terminales del departamento ${selectedArea.nombre}` : 'Selecciona un departamento' }}</h3>
           <p v-if="selectedArea" class="panel-caption">
             {{ selectedProcess?.nombre }} <span>›</span> {{ selectedSubproceso?.nombre }} <span>›</span> {{ selectedArea.nombre }}
           </p>
-          <p v-else class="panel-caption">Elige una zona arriba para consultar o asignar terminales.</p>
+          <p v-else class="panel-caption">Elige un departamento arriba para consultar o asignar terminales.</p>
         </div>
         <button
           v-if="selectedArea && !auth.isReadOnly"
@@ -152,11 +152,11 @@
             type="button"
             :disabled="assigningIds.includes(device.id)"
             @click="unassignDevice(device)"
-          >Quitar de la zona</button>
+          >Quitar del departamento</button>
         </div>
       </div>
       <div v-else-if="selectedArea" class="empty-state large-empty">
-        No hay terminales asignadas a esta zona todavía.
+        No hay terminales asignadas a este departamento todavía.
         <button v-if="!auth.isReadOnly" class="text-button" type="button" @click="openAssignment">Asignar una terminal</button>
       </div>
     </section>
@@ -166,7 +166,7 @@
         <div class="modal-heading">
           <div>
             <p class="eyebrow">{{ editingId ? 'Editar' : 'Agregar' }} {{ catalogLabel(editingCatalog) }}</p>
-            <h3>{{ editingId ? 'Actualizar información' : `Nueva ${catalogLabel(editingCatalog).toLowerCase()}` }}</h3>
+            <h3>{{ editingId ? 'Actualizar información' : catalogCreateTitle(editingCatalog) }}</h3>
           </div>
           <button class="modal-close" type="button" aria-label="Cerrar" @click="closeCatalog"><XIcon class="ui-icon" aria-hidden="true" /></button>
         </div>
@@ -204,12 +204,12 @@
               <strong>{{ device.modelo || device.device_uuid || `Terminal ${device.id}` }}</strong>
               <small>
                 {{ device.fabricante || 'Fabricante no disponible' }} ·
-                {{ device.area_id ? `Ubicación actual: ${device.distribucion_nombre} › ${device.division_nombre} › ${device.zona_nombre}` : 'Sin ubicación asignada' }}
+                {{ device.area_id ? `Ubicación actual: División ${device.distribucion_nombre} › Zona ${device.division_nombre} › Departamento ${device.zona_nombre}` : 'Sin ubicación asignada' }}
               </small>
             </span>
           </label>
           <div v-if="!assignableDevices.length" class="empty-state">
-            {{ deviceQuery ? 'No hay terminales que coincidan con la búsqueda.' : 'Todas las terminales ya están asignadas a esta zona.' }}
+            {{ deviceQuery ? 'No hay terminales que coincidan con la búsqueda.' : 'Todas las terminales ya están asignadas a este departamento.' }}
           </div>
         </div>
         <p v-if="modalError" class="form-error" role="alert">{{ modalError }}</p>
@@ -318,7 +318,7 @@ async function loadData() {
       hour12: true,
     });
   } catch (error) {
-    console.error('Error cargando el catálogo de zonas:', error);
+    console.error('Error cargando el catálogo de ubicaciones:', error);
     loadError.value = error.response?.status === 401
       ? 'Tu sesión no está autenticada.'
       : 'No fue posible cargar el catálogo o las terminales.';
@@ -376,7 +376,30 @@ function closeCatalog() {
 }
 
 function catalogLabel(type) {
-  return { proceso: 'Distribución', subproceso: 'División', area: 'Zona' }[type] || '';
+  return { proceso: 'División', subproceso: 'Zona', area: 'Departamento' }[type] || '';
+}
+
+function catalogCreateTitle(type) {
+  const article = type === 'area' ? 'Nuevo' : 'Nueva';
+  return `${article} ${catalogLabel(type).toLowerCase()}`;
+}
+
+function catalogVerb(type, action) {
+  const feminine = {
+    updated: 'actualizada',
+    saved: 'guardada',
+    activated: 'activada',
+    deactivated: 'desactivada',
+    deleted: 'eliminada',
+  };
+  const masculine = {
+    updated: 'actualizado',
+    saved: 'guardado',
+    activated: 'activado',
+    deactivated: 'desactivado',
+    deleted: 'eliminado',
+  };
+  return (type === 'area' ? masculine : feminine)[action];
 }
 
 function catalogEndpoint(type) {
@@ -414,7 +437,7 @@ async function saveCatalog() {
     if (type === 'proceso') selectProcess(processes.value.find((item) => item.id === createdId));
     if (type === 'subproceso') selectSubproceso(subprocesos.value.find((item) => item.id === createdId));
     if (type === 'area') selectArea(areas.value.find((item) => item.id === createdId));
-    actionSuccess.value = `${catalogLabel(type)} "${savedName}" ${wasEditing ? 'actualizada' : 'guardada'}.`;
+    actionSuccess.value = `${catalogLabel(type)} "${savedName}" ${catalogVerb(type, wasEditing ? 'updated' : 'saved')}.`;
   } catch (error) {
     console.error('Error guardando elemento del catálogo:', error.response?.data || error);
     modalError.value = error.response?.data?.nombre?.[0]
@@ -432,7 +455,7 @@ async function toggleActive(type, item) {
   try {
     await api.patch(`${endpoint}${item.id}/`, { activo: !item.activo });
     await loadData();
-    actionSuccess.value = `${catalogLabel(type)} "${item.nombre}" ${item.activo ? 'desactivada' : 'activada'}.`;
+    actionSuccess.value = `${catalogLabel(type)} "${item.nombre}" ${catalogVerb(type, item.activo ? 'deactivated' : 'activated')}.`;
   } catch (error) {
     console.error('Error cambiando estado del catálogo:', error.response?.data || error);
     actionError.value = error.response?.data?.detail || 'No se pudo actualizar el estado.';
@@ -448,7 +471,7 @@ async function deleteCatalog(type, item) {
   try {
     await api.delete(`${catalogEndpoint(type)}${item.id}/`);
     await loadData();
-    actionSuccess.value = `${catalogLabel(type)} "${item.nombre}" eliminada.`;
+    actionSuccess.value = `${catalogLabel(type)} "${item.nombre}" ${catalogVerb(type, 'deleted')}.`;
   } catch (error) {
     console.error(`Error eliminando ${label}:`, error.response?.data || error);
     actionError.value = error.response?.data?.detail
@@ -482,7 +505,7 @@ async function assignDevices() {
     selectedDeviceIds.value = [];
     await loadData();
   } catch (error) {
-    console.error('Error asignando terminales a la zona:', error.response?.data || error);
+    console.error('Error asignando terminales al departamento:', error.response?.data || error);
     modalError.value = error.response?.data?.detail
       || 'No se pudieron asignar todas las terminales. Actualiza la lista y revisa sus ubicaciones.';
     await loadData();
@@ -498,8 +521,8 @@ async function unassignDevice(device) {
     await api.patch(`/zonas/dispositivos/${device.id}/`, { area_id: null });
     await loadData();
   } catch (error) {
-    console.error('Error quitando la terminal de la zona:', error.response?.data || error);
-    actionError.value = error.response?.data?.detail || 'No se pudo quitar la terminal de la zona.';
+    console.error('Error quitando la terminal del departamento:', error.response?.data || error);
+    actionError.value = error.response?.data?.detail || 'No se pudo quitar la terminal del departamento.';
   } finally {
     assigningIds.value = assigningIds.value.filter((id) => id !== device.id);
   }

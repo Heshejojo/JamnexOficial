@@ -15,9 +15,9 @@ que comienzan con `/device/` usan la credencial propia del dispositivo.
 | GET/POST | `/api/roles/` | Administra roles. |
 
 Los permisos por módulo se asignan en `permisos`; la clave `zonas` controla
-el acceso a Zonas y a `/api/areas/`. El rol `ADMIN` puede modificar los módulos
-permitidos; `CONSULTA` puede consultar todos los módulos (GET/HEAD/OPTIONS),
-pero no modificarlos.
+el acceso al módulo Ubicaciones y a `/api/areas/`. El rol `ADMIN` puede
+modificar los módulos permitidos; `CONSULTA` puede consultar todos los módulos
+(GET/HEAD/OPTIONS), pero no modificarlos.
 
 Encabezado:
 
@@ -142,10 +142,10 @@ Ruta administrativa para invalidar la credencial de un dispositivo.
 
 | Recurso | Rutas |
 |---|---|
-| Distribuciones | `GET/POST /api/procesos/`, `GET/PATCH/DELETE /api/procesos/<id>/` |
-| Divisiones | `GET/POST /api/subprocesos/`, `GET/PATCH/DELETE /api/subprocesos/<id>/` |
-| Zonas | `GET/POST /api/areas/`, `GET/PATCH/DELETE /api/areas/<id>/` |
-| Terminales por zona | `GET /api/zonas/dispositivos/`, `GET/PATCH /api/zonas/dispositivos/<id>/` |
+| Divisiones | `GET/POST /api/procesos/`, `GET/PATCH/DELETE /api/procesos/<id>/` |
+| Zonas | `GET/POST /api/subprocesos/`, `GET/PATCH/DELETE /api/subprocesos/<id>/` |
+| Departamentos | `GET/POST /api/areas/`, `GET/PATCH/DELETE /api/areas/<id>/` |
+| Terminales por departamento | `GET /api/zonas/dispositivos/`, `GET/PATCH /api/zonas/dispositivos/<id>/` |
 | Trabajadores | `GET/POST /api/trabajadores/`, `GET/PUT/DELETE /api/trabajadores/<id>/` |
 | Dispositivos | `GET/POST /api/dispositivos/`, `GET/PUT/PATCH/DELETE /api/dispositivos/<id>/` |
 | SIMs | `GET/POST /api/sims/`, `GET/PUT/PATCH/DELETE /api/sims/<id>/` |
@@ -155,12 +155,18 @@ Ruta administrativa para invalidar la credencial de un dispositivo.
 | RAM | `GET/POST /api/ram/`, `GET/PUT/DELETE /api/ram/<id>/` |
 | Almacenamiento | `GET/POST /api/almacenamiento/`, `GET/PUT/DELETE /api/almacenamiento/<id>/` |
 
-Una división recibe `proceso_id`; una zona recibe `subproceso_id`. Para asignar
-o quitar una terminal de una zona, envía `PATCH` a
+Para crear una zona, envía `proceso_id` con el ID de la división; para crear un
+departamento, envía `subproceso_id` con el ID de la zona. Para asignar o quitar
+una terminal de un departamento, envía `PATCH` a
 `/api/zonas/dispositivos/<id>/` con `{"area_id": <id>}` o `{"area_id": null}`.
-La lectura de este catálogo y las asignaciones requieren el permiso `zonas`.
-La eliminación de una distribución o división se rechaza mientras tenga
-elementos dependientes; una zona no se elimina mientras tenga terminales,
+La lectura del módulo Ubicaciones y las asignaciones requieren el permiso
+`zonas`.
+Los endpoints y campos conservan sus nombres actuales por compatibilidad.
+En respuestas de dispositivos, `distribucion_nombre`, `division_nombre` y
+`zona_nombre` representan respectivamente la división, la zona y el
+departamento.
+La eliminación de una división o zona se rechaza mientras tenga elementos
+dependientes; un departamento no se elimina mientras tenga terminales,
 trabajadores o relaciones asociadas.
 
 ## Operaciones de SIM

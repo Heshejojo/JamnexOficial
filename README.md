@@ -94,7 +94,7 @@ El backend expone la API bajo el prefijo `/api/` y contiene módulos para:
 | Aplicación | Responsabilidad |
 |---|---|
 | `usuarios` | Login JWT, usuarios, roles y permisos administrativos. |
-| `areas` | Catálogo de áreas de trabajo. |
+| `areas` | Catálogo interno de ubicaciones: divisiones, zonas y departamentos. |
 | `trabajadores` | Personas y asignaciones laborales. |
 | `dispositivos` | Registro del equipo Android, credenciales, telemetría, SIM reportadas y consumo recibido desde el móvil. |
 | `sims` | Líneas SIM, estados, ranuras, transferencias e historial por dispositivo. |

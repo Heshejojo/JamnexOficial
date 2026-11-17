@@ -23,7 +23,7 @@
           <CreditCard class="nav-icon" aria-hidden="true" />SIMs
         </router-link>
         <router-link v-if="can('zonas')" to="/zonas" class="nav-item" exact-active-class="active">
-          <MapPin class="nav-icon" aria-hidden="true" />Zonas
+          <MapPin class="nav-icon" aria-hidden="true" />Ubicaciones
         </router-link>
         <router-link v-if="can('usuarios')" to="/usuarios" class="nav-item" exact-active-class="active">
           <Users class="nav-icon" aria-hidden="true" />Usuarios

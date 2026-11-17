@@ -34,7 +34,7 @@
       <div class="attention-panel location-panel">
         <div class="attention-heading">
           <div><span class="hero-kicker">⌖ &nbsp; Organización</span><h3>Ubicación de terminales</h3></div>
-          <router-link to="/zonas">Administrar zonas →</router-link>
+          <router-link to="/zonas">Administrar ubicaciones →</router-link>
         </div>
         <div class="location-counts">
           <div class="location-count">
@@ -51,7 +51,7 @@
         </div>
         <div class="attention-footer">
           {{ metrics.devices
-            ? `${assignedPercent}% de las ${metrics.devices} terminales tienen una zona asignada.`
+            ? `${assignedPercent}% de las ${metrics.devices} terminales tienen un departamento asignado.`
             : 'Aún no hay terminales registradas.' }}
         </div>
       </div>

@@ -52,7 +52,7 @@ class AreaSerializer(serializers.ModelSerializer):
         subproceso = attrs.get('subproceso', getattr(self.instance, 'subproceso', None))
         if subproceso is None:
             raise serializers.ValidationError({
-                'subproceso_id': 'Selecciona la división a la que pertenece esta zona.'
+                'subproceso_id': 'Selecciona la zona a la que pertenece este departamento.'
             })
         return attrs
 

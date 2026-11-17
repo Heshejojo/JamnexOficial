@@ -21,7 +21,7 @@ class ProcesoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, instance):
         if instance.divisiones.exists() or instance.zonas.exists():
-            raise ValidationError('Primero elimina las divisiones y relaciones de esta distribución.')
+            raise ValidationError('Primero elimina las zonas y relaciones de esta división.')
         instance.delete()
 
 
@@ -38,7 +38,7 @@ class SubprocesoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, instance):
         if instance.zonas.exists():
-            raise ValidationError('Primero elimina las zonas de esta división.')
+            raise ValidationError('Primero elimina los departamentos de esta zona.')
         instance.delete()
 
 
@@ -60,7 +60,7 @@ class AreaDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             or instance.procesos_zona.exists()
         ):
             raise ValidationError(
-                'No se puede eliminar: primero quita las terminales, trabajadores y relaciones asignadas a esta zona.'
+                'No se puede eliminar: primero quita las terminales, trabajadores y relaciones asignadas a este departamento.'
             )
         instance.delete()
 

@@ -161,52 +161,53 @@ class ZoneCatalogApiTest(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-    def test_create_hierarchy_and_assign_terminal_from_zones(self):
-        distribution_response = self.client.post(
-            '/api/procesos/',
-            {'nombre': 'Distribución Norte'},
-            format='json',
-        )
-        self.assertEqual(distribution_response.status_code, 201)
-        distribution_id = distribution_response.data['id']
-
+    def test_create_division_zone_department_and_assign_terminal(self):
         division_response = self.client.post(
-            '/api/subprocesos/',
-            {'nombre': 'División 1', 'proceso_id': distribution_id},
+            '/api/procesos/',
+            {'nombre': 'División Norte'},
             format='json',
         )
         self.assertEqual(division_response.status_code, 201)
+        division_id = division_response.data['id']
 
         zone_response = self.client.post(
-            '/api/areas/',
-            {'nombre': 'Zona A', 'subproceso_id': division_response.data['id']},
+            '/api/subprocesos/',
+            {'nombre': 'Zona 1', 'proceso_id': division_id},
             format='json',
         )
         self.assertEqual(zone_response.status_code, 201)
 
+        department_response = self.client.post(
+            '/api/areas/',
+            {'nombre': 'Departamento A', 'subproceso_id': zone_response.data['id']},
+            format='json',
+        )
+        self.assertEqual(department_response.status_code, 201)
+
         device = Dispositivo.objects.create(device_uuid='zone-assignment-device')
         assignment_response = self.client.patch(
             f'/api/zonas/dispositivos/{device.pk}/',
-            {'area_id': zone_response.data['id']},
+            {'area_id': department_response.data['id']},
             format='json',
         )
         self.assertEqual(assignment_response.status_code, 200)
-        self.assertEqual(assignment_response.data['zona_nombre'], 'Zona A')
-        self.assertEqual(assignment_response.data['division_nombre'], 'División 1')
-        self.assertEqual(assignment_response.data['distribucion_nombre'], 'Distribución Norte')
+        self.assertEqual(assignment_response.data['zona_nombre'], 'Departamento A')
+        self.assertEqual(assignment_response.data['division_nombre'], 'Zona 1')
+        self.assertEqual(assignment_response.data['distribucion_nombre'], 'División Norte')
 
         device.refresh_from_db()
-        self.assertEqual(device.area_id, zone_response.data['id'])
+        self.assertEqual(device.area_id, department_response.data['id'])
 
-    def test_zone_requires_existing_division_for_assignment(self):
+    def test_department_requires_existing_zone_for_assignment(self):
         response = self.client.post(
             '/api/areas/',
-            {'nombre': 'Zona sin división'},
+            {'nombre': 'Departamento sin zona'},
             format='json',
         )
         self.assertEqual(response.status_code, 400)
+        self.assertIn('Selecciona la zona a la que pertenece este departamento.', response.data['subproceso_id'])
 
-        legacy_area = Area.objects.create(nombre='Zona sin relación')
+        legacy_area = Area.objects.create(nombre='Departamento sin relación')
         device = Dispositivo.objects.create(device_uuid='unassigned-zone-device')
         response = self.client.patch(
             f'/api/zonas/dispositivos/{device.pk}/',
@@ -215,24 +216,24 @@ class ZoneCatalogApiTest(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    def test_empty_zone_can_be_deleted_but_assigned_zone_cannot(self):
-        process = Proceso.objects.create(nombre='Distribución para borrar')
-        division = Subproceso.objects.create(nombre='División para borrar', proceso=process)
-        zone = Area.objects.create(nombre='Zona para borrar', subproceso=division)
+    def test_empty_department_can_be_deleted_but_assigned_department_cannot(self):
+        division = Proceso.objects.create(nombre='División para borrar')
+        zone = Subproceso.objects.create(nombre='Zona para borrar', proceso=division)
+        department = Area.objects.create(nombre='Departamento para borrar', subproceso=zone)
         device = Dispositivo.objects.create(
             device_uuid='assigned-zone-delete-device',
-            area=zone,
+            area=department,
         )
 
-        response = self.client.delete(f'/api/areas/{zone.pk}/')
+        response = self.client.delete(f'/api/areas/{department.pk}/')
         self.assertEqual(response.status_code, 400)
-        self.assertTrue(Area.objects.filter(pk=zone.pk).exists())
+        self.assertTrue(Area.objects.filter(pk=department.pk).exists())
 
         device.area = None
         device.save(update_fields=['area'])
-        response = self.client.delete(f'/api/areas/{zone.pk}/')
+        response = self.client.delete(f'/api/areas/{department.pk}/')
         self.assertEqual(response.status_code, 204)
-        self.assertFalse(Area.objects.filter(pk=zone.pk).exists())
+        self.assertFalse(Area.objects.filter(pk=department.pk).exists())
 
 
 class TrabajadorCrudApiTest(TestCase):

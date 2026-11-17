@@ -218,9 +218,11 @@ function formatDate(dateString) {
 
 function formatLocation(device) {
   if (!device.zona_nombre) return 'Sin asignar';
-  return [device.distribucion_nombre, device.division_nombre, device.zona_nombre]
-    .filter(Boolean)
-    .join(' › ');
+  return [
+    device.distribucion_nombre && `División ${device.distribucion_nombre}`,
+    device.division_nombre && `Zona ${device.division_nombre}`,
+    `Departamento ${device.zona_nombre}`,
+  ].filter(Boolean).join(' › ');
 }
 
 function formatMegabytes(value) {

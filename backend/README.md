@@ -28,10 +28,12 @@ python manage.py migrate
 python manage.py runserver 0.0.0.0:8000
 ```
 
-El módulo `areas` administra distribuciones (`procesos`), divisiones
-(`subprocesos`) y zonas (`areas`). Las migraciones `0002` y `0003` preparan
-esas tablas y sus relaciones; `dispositivos.0004` agrega la asignación opcional
-de cada terminal a una zona. Las tablas puente `procesos_zona` y
+El módulo interno `areas` administra la jerarquía que la interfaz muestra como
+divisiones (`procesos`), zonas (`subprocesos`) y departamentos (`areas`).
+Los nombres internos de tablas, rutas y campos se conservan para mantener
+compatibilidad. Las migraciones `0002` y `0003` preparan esas tablas y sus
+relaciones; `dispositivos.0004` agrega la asignación opcional de cada terminal
+a un departamento. Las tablas puente `procesos_zona` y
 `areas_procesos_zona` se conservan. Aplica los cambios con
 `python manage.py migrate`.
 

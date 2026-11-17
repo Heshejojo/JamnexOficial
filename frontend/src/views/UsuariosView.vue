@@ -109,7 +109,7 @@ const permissionOptions = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'dispositivos', label: 'Dispositivos' },
   { key: 'sims', label: 'SIMs' },
-  { key: 'zonas', label: 'Zonas' },
+  { key: 'zonas', label: 'Ubicaciones' },
   { key: 'usuarios', label: 'Usuarios' },
 ];
 const isConsultaRole = computed(() => assignableRoles.value.some(
