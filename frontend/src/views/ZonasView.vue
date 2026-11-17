@@ -128,7 +128,17 @@
       <div v-if="selectedArea && currentDevices.length" class="device-list">
         <div v-for="device in currentDevices" :key="device.id" class="device-row">
           <div class="device-avatar"><Smartphone class="ui-icon" aria-hidden="true" /></div>
-          <div class="device-copy">
+          <button
+            v-if="canViewDevices"
+            class="device-copy device-link"
+            type="button"
+            :aria-label="'Ver información de ' + (device.modelo || device.device_uuid || 'terminal ' + device.id)"
+            @click="viewDevice(device)"
+          >
+            <strong>{{ device.modelo || device.device_uuid || `Terminal ${device.id}` }}</strong>
+            <small>{{ device.fabricante || 'Fabricante no disponible' }} · {{ device.device_uuid || 'Sin UUID' }}</small>
+          </button>
+          <div v-else class="device-copy">
             <strong>{{ device.modelo || device.device_uuid || `Terminal ${device.id}` }}</strong>
             <small>{{ device.fabricante || 'Fabricante no disponible' }} · {{ device.device_uuid || 'Sin UUID' }}</small>
           </div>
@@ -216,11 +226,13 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { ChevronRight, CircleCheck, CircleX, Pencil, Plus, Smartphone, Trash2, ToggleLeft, ToggleRight, X as XIcon } from '@lucide/vue';
 import api from '../services/api';
 import { useAuthStore } from '../stores/auth';
 
 const auth = useAuthStore();
+const router = useRouter();
 const processes = ref([]);
 const subprocesos = ref([]);
 const areas = ref([]);
@@ -244,6 +256,9 @@ const selectedDeviceIds = ref([]);
 const assigningIds = ref([]);
 const savingAssignment = ref(false);
 
+const canViewDevices = computed(() => auth.user?.is_superuser
+  || auth.user?.rol?.nombre?.toUpperCase() === 'CONSULTA'
+  || auth.user?.permisos?.dispositivos === true);
 const activeProcesses = computed(() => processes.value.filter((item) => item.activo));
 const visibleSubprocesos = computed(() => selectedProcess.value
   ? subprocesos.value.filter((item) => item.proceso_id === selectedProcess.value.id)
@@ -331,6 +346,10 @@ function selectArea(area) {
   selectedArea.value = area;
   actionError.value = '';
   actionSuccess.value = '';
+}
+
+function viewDevice(device) {
+  router.push({ name: 'dispositivos', query: { dispositivo: device.id } });
 }
 
 function openCreate(type) {
@@ -581,6 +600,9 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .device-avatar { width: 40px; height: 40px; border-radius: 11px; }
 .device-copy strong { font-size: .87rem; }
 .device-copy small { font-size: .72rem; }
+.device-link { width: 100%; padding: 0; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.device-link:hover strong { color: #167A39; text-decoration: underline; text-underline-offset: 3px; }
+.device-link:focus-visible { outline: 3px solid rgba(30,155,72,.24); outline-offset: 3px; border-radius: 4px; }
 .device-status { padding: 6px 9px; border-radius: 999px; background: #F0F3F7; }
 .device-status.online { background: #EAF7EE; }
 .link-button { padding: 8px 10px; border-radius: 7px; transition: background .18s ease; }

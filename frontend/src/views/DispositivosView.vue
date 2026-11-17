@@ -183,12 +183,14 @@
 <script setup>
 import { computed, onActivated, onBeforeUnmount, onDeactivated, reactive, ref } from 'vue';
 import { BatteryCharging, ChevronRight, CircleCheck, CircleX, Code2, Cpu, Factory, Fingerprint, HardDrive, MapPin, Pencil, ScanBarcode, ScanLine, Smartphone, Trash2, TriangleAlert, Wifi, X as XIcon } from '@lucide/vue';
+import { useRoute } from 'vue-router';
 import api from '../services/api';
 import { useAuthStore } from '../stores/auth';
 
 defineOptions({ name: 'DispositivosView' });
 
 const auth = useAuthStore();
+const route = useRoute();
 const items = ref([]);
 const selectedDevice = ref(null);
 const query = ref('');
@@ -459,7 +461,18 @@ function selectDetail(item) {
 let refreshTimer = null;
 
 function activateView() {
-  loadData();
+  const requestedDeviceId = Number(route.query.dispositivo);
+  if (Number.isInteger(requestedDeviceId) && requestedDeviceId > 0) {
+    selectedDevice.value = null;
+  }
+  const loadPromise = loadData();
+  if (Number.isInteger(requestedDeviceId) && requestedDeviceId > 0) {
+    loadPromise.then(() => {
+      if (!refreshTimer) return;
+      const device = items.value.find((item) => Number(item.id) === requestedDeviceId);
+      if (device) selectDetail(device);
+    });
+  }
   refreshTimer = setInterval(loadData, 30000);
 }
 
