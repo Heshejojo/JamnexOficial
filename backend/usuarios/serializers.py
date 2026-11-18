@@ -27,11 +27,12 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 class UsuarioAdminSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    rol = RolSerializer(read_only=True)
     rol_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password', 'rol_id', 'activo', 'is_staff', 'permisos']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password', 'rol', 'rol_id', 'activo', 'is_staff', 'permisos']
 
     def validate_permisos(self, value):
         base = {
@@ -78,7 +79,7 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
-        role_id = validated_data.pop('rol_id', None)
+        role_id = validated_data.pop('rol_id', instance.rol_id)
         role = self._role(role_id)
         if role.nombre.upper() == 'CONSULTA':
             validated_data['permisos'] = {key: True for key in MODULE_PERMISSION_KEYS}

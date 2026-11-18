@@ -133,6 +133,31 @@ class ConsultaRolePermissionsTest(TestCase):
         self.assertEqual(created_user.rol.nombre, 'CONSULTA')
         self.assertTrue(created_user.permisos['zonas'])
 
+    def test_admin_can_change_user_role_and_api_returns_current_role(self):
+        admin = Usuario.objects.create_superuser(
+            username='role-update-admin',
+            email='role-update-admin@example.com',
+            password='test-password',
+        )
+        target = Usuario.objects.create_user(
+            username='role-update-target',
+            email='role-update-target@example.com',
+            password='test-password',
+            rol=Rol.objects.get(nombre='ADMIN'),
+        )
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(
+            f'/api/usuarios/{target.pk}/',
+            {'rol_id': Rol.objects.get(nombre='CONSULTA').pk},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['rol']['nombre'], 'CONSULTA')
+        target.refresh_from_db()
+        self.assertEqual(target.rol.nombre, 'CONSULTA')
+
     def test_consulta_cannot_assign_device_zone(self):
         device = Dispositivo.objects.create(device_uuid='readonly-zone-device')
         response = self.client.patch(
