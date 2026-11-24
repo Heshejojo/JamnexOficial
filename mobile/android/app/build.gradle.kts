@@ -1,10 +1,11 @@
 plugins {
     id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // El plugin Flutter va después de los plugins Android y Kotlin para leer su configuración.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
+    // Namespace Kotlin/Android y versiones de SDK proporcionadas por Flutter.
     namespace = "com.example.agente_cfe"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -15,24 +16,19 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // Identificador único de la aplicación en Android y en los canales Flutter.
         applicationId = "com.example.agente_cfe"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // Flutter suministra los SDK mínimos y destino según la configuración del proyecto.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
+        // Gradle toma la versión de pubspec.yaml para mantener una sola fuente de verdad.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Firma temporal de depuración: debe sustituirse por una clave de publicación.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -49,5 +45,6 @@ flutter {
 }
 
 dependencies {
+    // WorkManager ejecuta sincronizaciones periódicas y al recuperar conectividad.
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 }

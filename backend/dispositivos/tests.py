@@ -1,3 +1,5 @@
+"""Pruebas de API para identidad, actividad, consumo y presencia de SIM."""
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -14,6 +16,8 @@ from sims.models import Sim, SimTransferConflict, normalize_iccid
 
 
 class DeviceActivityTimeoutTest(TestCase):
+    """Verifica el umbral de actividad usado para mostrar equipos en línea."""
+
     def test_device_becomes_inactive_after_seventy_two_hours_without_contact(self):
         device = Dispositivo.objects.create(
             device_uuid='activity-timeout-test',
@@ -65,6 +69,8 @@ class DeviceActivityTimeoutTest(TestCase):
 
 
 class DeviceRegisterManualFieldsTest(TestCase):
+    """Comprueba el registro de identidad y la conservación de campos manuales."""
+
     def test_device_registration_does_not_overwrite_edited_serial_or_imei(self):
         client = APIClient()
         response = client.post(
@@ -121,6 +127,8 @@ class DeviceRegisterManualFieldsTest(TestCase):
 
 
 class DeviceIdentityApiTest(TestCase):
+    """Comprueba la actualización y unicidad de identificadores del dispositivo."""
+
     def setUp(self):
         self.client = APIClient()
         registration = self.client.post(
@@ -240,6 +248,8 @@ class DeviceIdentityApiTest(TestCase):
 
 
 class DeviceConsumptionMobileOnlyTest(TestCase):
+    """Verifica que los reportes móviles no atribuyan consumo Wi-Fi."""
+
     def setUp(self):
         self.client = APIClient()
         registration = self.client.post(
@@ -408,6 +418,8 @@ class DeviceConsumptionMobileOnlyTest(TestCase):
 
 
 class DeviceSimStatusTest(TestCase):
+    """Comprueba el cierre histórico de SIM que ya no están presentes."""
+
     def setUp(self):
         self.client = APIClient()
         registration = self.client.post(
@@ -462,6 +474,8 @@ class DeviceSimStatusTest(TestCase):
 
 
 class DeviceSimPhoneNumberTest(TestCase):
+    """Comprueba la sincronización de números telefónicos de SIM."""
+
     def setUp(self):
         self.client = APIClient()
         registration = self.client.post(
@@ -538,6 +552,8 @@ class DeviceSimPhoneNumberTest(TestCase):
 
 
 class DeviceSimTransferTest(TestCase):
+    """Comprueba la detección y resolución de transferencias entre equipos."""
+
     def setUp(self):
         self.client = APIClient()
         self.source = Dispositivo.objects.create(device_uuid='sim-source-device')

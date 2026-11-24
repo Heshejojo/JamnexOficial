@@ -1,3 +1,5 @@
+"""API de consulta y administración de catálogos y zonas operativas."""
+
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
 

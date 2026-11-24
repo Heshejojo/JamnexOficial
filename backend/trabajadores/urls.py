@@ -1,3 +1,5 @@
+"""Rutas para consultar y administrar trabajadores."""
+
 from django.urls import path
 
 from .views import TrabajadorDetailAPIView, TrabajadorListCreateAPIView

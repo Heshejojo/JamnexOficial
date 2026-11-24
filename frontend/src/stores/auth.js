@@ -1,3 +1,4 @@
+// Estado de sesión persistido: conserva identidad, JWT y permisos entre recargas.
 import { defineStore } from 'pinia';
 import api from '../services/api';
 
@@ -33,6 +34,7 @@ export const useAuthStore = defineStore('auth', {
 
       this.loading = true;
       try {
+        // La respuesta del backend es la fuente de verdad para roles y permisos vigentes.
         const { data } = await api.get('/usuarios/me/');
         this.user = data;
         localStorage.setItem('user', JSON.stringify(data));

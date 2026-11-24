@@ -1,4 +1,5 @@
 <template>
+  <!-- Resume métricas y alertas operativas; sus datos se renuevan automáticamente. -->
   <div class="dashboard-page">
     <header class="topbar">
       <div class="welcome-heading">
@@ -103,6 +104,7 @@ async function loadDashboard() {
   syncError.value = false;
   syncMessage.value = '';
   try {
+    // Una sola respuesta agrega dispositivos, SIMs y consumo del mes seleccionado.
     const [selYear, selMonth] = selectedMonth.split('-').map(Number);
     const summaryResponse = await api.get('/dashboard/summary/', {
       params: { anio: selYear, mes: selMonth },

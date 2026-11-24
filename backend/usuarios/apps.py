@@ -1,3 +1,5 @@
+"""Configuración de usuarios y provisión de la cuenta inicial."""
+
 import sys
 
 from django.apps import AppConfig
@@ -7,6 +9,7 @@ from django.dispatch import receiver
 
 @receiver(post_migrate)
 def create_demo_user(sender, **kwargs):
+    """Crea el administrador de demostración fuera de ejecuciones de prueba."""
     if sender.name != 'usuarios' or 'test' in sys.argv:
         return
 
@@ -27,5 +30,7 @@ def create_demo_user(sender, **kwargs):
 
 
 class UsuariosConfig(AppConfig):
+    """Registra las señales de inicialización de usuarios."""
+
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'usuarios'

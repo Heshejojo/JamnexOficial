@@ -1,4 +1,5 @@
 <template>
+  <!-- Vista mínima de entrada para instalaciones que no requieren el panel autenticado. -->
   <div class="text-center py-5">
     <h1>Jamnex</h1>
     <p class="text-muted">Panel administrativo base</p>

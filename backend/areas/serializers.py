@@ -1,3 +1,5 @@
+"""Validación y representación de procesos, áreas y zonas."""
+
 from rest_framework import serializers
 
 from dispositivos.models import Dispositivo

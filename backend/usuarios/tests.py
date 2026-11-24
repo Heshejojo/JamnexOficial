@@ -1,3 +1,5 @@
+"""Pruebas de autenticación, permisos por rol y API de administración."""
+
 from unittest.mock import patch
 
 from django.apps import apps
@@ -11,6 +13,8 @@ from usuarios.models import Rol, Usuario
 
 
 class DemoUserPostMigrateTest(TestCase):
+    """Evita duplicar o reemplazar una cuenta al inicializar usuarios."""
+
     def test_existing_admin_username_does_not_break_migrate(self):
         admin = Usuario.objects.create_superuser(
             username='admin',
@@ -28,6 +32,8 @@ class DemoUserPostMigrateTest(TestCase):
 
 
 class UsuariosAuthSmokeTest(TestCase):
+    """Comprueba inicio de sesión, token y perfil autenticado."""
+
     def test_smoke(self):
         self.assertTrue(True)
 
@@ -48,6 +54,8 @@ class UsuariosAuthSmokeTest(TestCase):
 
 
 class ConsultaRolePermissionsTest(TestCase):
+    """Verifica que el rol de consulta pueda leer, pero no modificar recursos."""
+
     def setUp(self):
         role = Rol.objects.get(nombre='CONSULTA')
         self.user = Usuario.objects.create_user(
@@ -169,6 +177,8 @@ class ConsultaRolePermissionsTest(TestCase):
 
 
 class ZoneCatalogApiTest(TestCase):
+    """Comprueba la visibilidad y administración de catálogos de zonas."""
+
     def setUp(self):
         self.user = Usuario.objects.create_user(
             username='zone-admin',
@@ -262,6 +272,8 @@ class ZoneCatalogApiTest(TestCase):
 
 
 class TrabajadorCrudApiTest(TestCase):
+    """Comprueba las operaciones permitidas sobre trabajadores."""
+
     def setUp(self):
         self.user = Usuario.objects.create_user(
             username='tester',
@@ -297,6 +309,8 @@ class TrabajadorCrudApiTest(TestCase):
 
 
 class DeviceSecurityApiTest(TestCase):
+    """Comprueba autenticación de dispositivos y restricciones de acceso."""
+
     def setUp(self):
         self.user = Usuario.objects.create_superuser(
             username='device-admin', email='device-admin@agente.cfe', password='Admin123!'

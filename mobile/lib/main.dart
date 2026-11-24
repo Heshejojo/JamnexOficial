@@ -10,13 +10,16 @@ import 'services/device_service.dart';
 import 'providers/sync_provider.dart';
 import 'widgets/edit_identity_dialog.dart';
 
+/// Arranca la interfaz Flutter del agente Jamnex.
 void main() {
   runApp(const AgenteCfeApp());
 }
 
+/// Configuración raíz: tema, nombre visible y pantalla principal.
 class AgenteCfeApp extends StatelessWidget {
   const AgenteCfeApp({super.key});
 
+  /// Define la apariencia común y muestra el flujo de captura del dispositivo.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -35,6 +38,7 @@ class AgenteCfeApp extends StatelessWidget {
   }
 }
 
+/// Pantalla que presenta los datos del teléfono y permite sincronizarlos.
 class DeviceAgentHome extends StatefulWidget {
   const DeviceAgentHome({super.key});
 
@@ -43,6 +47,7 @@ class DeviceAgentHome extends StatefulWidget {
 }
 
 class _DeviceAgentHomeState extends State<DeviceAgentHome> {
+  // Estos servicios separan la captura, la comunicación HTTP y la cola offline.
   final DeviceService _deviceService = DeviceService();
   final ApiService _apiService = ApiService();
   final SyncProvider _syncProvider = SyncProvider();
@@ -61,6 +66,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     _initialize();
   }
 
+  /// Restaura credenciales y cola, configura WorkManager y realiza una captura.
   Future<void> _initialize() async {
     await Future.wait([
       _apiService.loadDeviceToken(),
@@ -68,6 +74,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     ]);
     await _loadIdentityOverrides();
 
+    // El canal nativo programa reintentos periódicos incluso si se cierra la UI.
     try {
       await _simChannel.invokeMethod<void>(
         'scheduleBackgroundSync',
@@ -82,6 +89,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   }
 
   Future<void> _collectAndSend() async {
+    // Evita que el botón, el arranque y una acción del usuario dupliquen una captura.
     if (_isLoading) return;
     final pendingEvents = <Map<String, dynamic>>[];
     if (mounted) {
@@ -92,6 +100,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     }
 
     try {
+      // Primero recupera la identidad local y obtiene una lectura nueva del teléfono.
       await _apiService.loadDeviceToken();
       final collectedSnapshot = await _deviceService.collectDeviceSnapshot();
       var snapshot = collectedSnapshot;
@@ -104,6 +113,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
         });
       }
 
+      // La API recibe registro, estado, red, SIMs y consumo como eventos separados.
       final devicePayload = snapshot.toBackendPayload()
         ..['device_uuid'] = deviceUuid;
       final statusPayload = <String, dynamic>{
@@ -128,6 +138,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           'tipo_conexion': _networkType(snapshot.connectionType),
         },
       });
+      // Conserva los identificadores originales del hardware al enviar SIMs.
       for (var index = 0; index < snapshot.sims.length; index++) {
         final sim = snapshot.sims[index];
         final reportedSim = collectedSnapshot.sims[index];
@@ -149,6 +160,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           },
         });
       }
+      // Solo se envían correcciones manuales de SIM que siguen presentes en el equipo.
       final currentSimIds =
           snapshot.sims.map((sim) => _simUuid(deviceUuid, sim)).toSet();
       final identitySims = _iccidOverrides.entries
@@ -167,6 +179,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
         if (_serialOverride != null) 'serial': _serialOverride,
         if (identitySims.isNotEmpty) 'sims': identitySims,
       };
+      // Un reporte explícito de lectura permite distinguir "sin SIM" de "sin permiso".
       if (snapshot.simsReadable == true) {
         pendingEvents.add({
           'endpoint': '/device/sims/status/',
@@ -190,8 +203,10 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
           },
         });
       }
+      // Android mantiene una sesión de red elegida mientras transmite todo el lote.
       await _apiService.withNetworkSession(() async {
         await _apiService.ensureDeviceRegistered(devicePayload);
+        // Vacía eventos anteriores antes de los nuevos para preservar el orden temporal.
         await _syncProvider.retry((item) async {
           final payload =
               Map<String, dynamic>.from(item['payload'] as Map? ?? {});
@@ -209,6 +224,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
             devicePayload,
           );
         }
+        // Los cambios de serie/ICCID no se agregan a la cola de telemetría general.
         if (identityPayload.isNotEmpty) {
           try {
             await _apiService.postDeviceJson(
@@ -244,6 +260,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
       }
     } catch (error) {
       debugPrint('Error al sincronizar datos del dispositivo: $error');
+      // En un fallo de red, guarda cada evento para reenviarlo en la próxima sesión.
       for (final event in pendingEvents) {
         await _syncProvider.enqueue({
           ...event,
@@ -272,6 +289,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   }
 
   Future<void> _loadIdentityOverrides() async {
+    // Las correcciones manuales se guardan localmente y sobreviven a reinicios.
     final preferences = await SharedPreferences.getInstance();
     final storedIdentity = preferences.getString('manual_device_identity');
     if (storedIdentity == null) return;
@@ -310,6 +328,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     DeviceSnapshot snapshot,
     String deviceUuid,
   ) {
+    // No modifica el dato leído del sistema; crea una copia con la identidad corregida.
     final sims = snapshot.sims.map((sim) {
       final override = _iccidOverrides[_simUuid(deviceUuid, sim)];
       return override == null
@@ -320,6 +339,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   }
 
   String _simUuid(String deviceUuid, Map<String, dynamic> sim) {
+    // La suscripción es el identificador preferido; la ranura es el respaldo estable.
     final subscriptionId = sim['subscription_id']?.toString().trim();
     if (subscriptionId != null && subscriptionId.isNotEmpty) {
       return subscriptionId;
@@ -331,6 +351,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     final snapshot = _snapshot;
     if (snapshot == null) return;
 
+    // Prepara etiquetas y valores iniciales para cada ICCID editable en el diálogo.
     final deviceUuid =
         snapshot.deviceId ?? 'flutter-${DateTime.now().millisecondsSinceEpoch}';
     final simTargets = <String, Map<String, dynamic>>{};
@@ -367,6 +388,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
       updatedIccidOverrides[simUuid] = override;
     }
 
+    // Persiste los cambios antes de sincronizar para no perderlos si la red falla.
     final preferences = await SharedPreferences.getInstance();
     final saved = await preferences.setString(
       'manual_device_identity',
@@ -398,6 +420,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
     Map<String, dynamic> payload,
     Map<String, dynamic> registrationPayload,
   ) async {
+    // El endpoint de estado de SIM es opcional en versiones antiguas del backend.
     if (endpoint == '/device/sims/status/') {
       await _apiService.postDeviceJsonIfAvailable(
         endpoint,
@@ -414,6 +437,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   }
 
   Future<void> _requestDevicePermissions() async {
+    // Android controla los permisos de telefonía y el acceso especial a estadísticas.
     try {
       await _simChannel.invokeMethod<void>('requestPermissions');
     } on PlatformException catch (error) {
@@ -431,6 +455,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
   }
 
   String _networkType(String? connectionType) {
+    // Convierte las etiquetas de presentación al vocabulario que espera la API.
     switch (connectionType) {
       case 'Wi‑Fi':
         return 'WIFI';
@@ -443,6 +468,7 @@ class _DeviceAgentHomeState extends State<DeviceAgentHome> {
 
   @override
   Widget build(BuildContext context) {
+    // La pantalla muestra el estado, resumen del equipo, consumo y controles de sync.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Jamnex'),
@@ -602,11 +628,13 @@ class _MobileDataHero extends StatelessWidget {
 
   const _MobileDataHero({required this.snapshot});
 
+  /// Convierte una medición en MB a una cifra legible para el panel.
   String _formatMb(num? megabytes) {
     if (megabytes == null) return 'No disponible';
     return '${megabytes.toStringAsFixed(2)} MB';
   }
 
+  /// El límite se conserva en MB y se presenta en GB para facilitar su lectura.
   String _formatGb(num? megabytes) {
     if (megabytes == null) return 'No disponible';
     return '${(megabytes / 1024).toStringAsFixed(2)} GB';
@@ -614,6 +642,7 @@ class _MobileDataHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // El progreso queda acotado entre 0 y 100 %, aunque el consumo supere el límite.
     final used = snapshot?.mobileDataDayMb;
     final limit = snapshot?.mobileDataLimitMb ?? 2048;
     final progress =
@@ -682,16 +711,19 @@ class _MonitoringPanel extends StatelessWidget {
 
   const _MonitoringPanel({required this.snapshot});
 
+  /// Formatea medidas opcionales; null significa que el equipo no pudo reportarlas.
   String _formatMb(num? megabytes) {
     if (megabytes == null) return 'No disponible';
     return '${megabytes.toStringAsFixed(2)} MB';
   }
 
+  /// Convierte la misma unidad base para las tarjetas de memoria y almacenamiento.
   String _formatGb(num? megabytes) {
     if (megabytes == null) return 'No disponible';
     return '${(megabytes / 1024).toStringAsFixed(2)} GB';
   }
 
+  /// Evita mostrar valores vacíos o nulos en los detalles de cada SIM.
   String _value(Map<String, dynamic> sim, String key) {
     final value = sim[key];
     return value == null || value.toString().isEmpty
@@ -699,6 +731,7 @@ class _MonitoringPanel extends StatelessWidget {
         : value.toString();
   }
 
+  /// Presenta una etiqueta y su valor con el mismo diseño en todas las secciones.
   Widget _detail(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -721,6 +754,7 @@ class _MonitoringPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Los detalles de red cambian según transporte; cada SIM se expande por separado.
     final current = snapshot;
     final usingMobile = current?.connectionType == 'Datos móviles';
     return Column(
@@ -841,6 +875,7 @@ class _MonitoringPanel extends StatelessWidget {
       required IconData icon,
       required List<Widget> children,
       bool expandable = false}) {
+    // Permite reutilizar la tarjeta del sistema tanto expandible como compacta.
     if (expandable) {
       return Card(
         margin: EdgeInsets.zero,
@@ -879,6 +914,7 @@ class _MonitoringPanel extends StatelessWidget {
   }
 }
 
+/// Tarjeta reutilizable con identidad del equipo, valor principal e información auxiliar.
 class DeviceSummaryCard extends StatelessWidget {
   final String title;
   final String value;

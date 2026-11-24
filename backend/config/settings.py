@@ -1,3 +1,5 @@
+"""Configuración del proyecto, incluidos acceso a datos y políticas de API."""
+
 from pathlib import Path
 import os
 from datetime import timedelta
@@ -94,6 +96,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# Se prefiere la URL explícita; sin configuración PostgreSQL se usa SQLite local.
 database_url = os.getenv('DATABASE_URL', '').strip()
 
 if database_url:

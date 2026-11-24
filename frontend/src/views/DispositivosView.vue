@@ -1,4 +1,5 @@
 <template>
+  <!-- Lista de terminales con detalle técnico y edición protegida para perfiles de solo lectura. -->
   <div class="crud-page">
     <header class="page-header">
       <div>
@@ -334,6 +335,7 @@ function getDeviceApps(deviceId) {
 
 async function loadDeviceDetails(deviceId) {
   try {
+    // El API expone cada telemetría por separado; se toma el registro más reciente.
     const [batteryRes, ramRes, storageRes, networkRes] = await Promise.all([
       api.get('/bateria/'),
       api.get('/ram/'),
@@ -376,6 +378,7 @@ async function loadData() {
   loading.value = true;
   loadError.value = '';
   try {
+    // Se conserva la selección actual después de sincronizar la lista.
     const devicesResponse = await api.get('/dispositivos/');
     const devices = Array.isArray(devicesResponse.data)
       ? devicesResponse.data
@@ -463,6 +466,7 @@ function selectDetail(item) {
 let refreshTimer = null;
 
 function activateView() {
+  // keep-alive exige iniciar y detener el refresco al cambiar de vista.
   const requestedDeviceId = Number(route.query.dispositivo);
   if (Number.isInteger(requestedDeviceId) && requestedDeviceId > 0) {
     selectedDevice.value = null;

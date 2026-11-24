@@ -1,3 +1,4 @@
+// Punto de entrada: registra Pinia, el router y los estilos globales antes de montar Vue.
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';

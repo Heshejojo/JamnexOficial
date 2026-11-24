@@ -1,3 +1,5 @@
+"""Vistas para consultar y actualizar mediciones de memoria RAM."""
+
 from rest_framework import generics
 
 from usuarios.permissions import RolePermission

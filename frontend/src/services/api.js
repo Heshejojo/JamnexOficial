@@ -1,3 +1,4 @@
+// Cliente HTTP compartido: adjunta JWT y reintenta una petición una sola vez al renovar sesión.
 import axios from 'axios';
 
 const api = axios.create({
@@ -15,6 +16,7 @@ api.interceptors.request.use((config) => {
 
 let refreshing = null;
 
+// Limpia credenciales locales y devuelve al login cuando ya no es posible renovar el token.
 function expireSession() {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
@@ -36,6 +38,7 @@ api.interceptors.response.use(
     }
 
     original._retry = true;
+    // Las peticiones concurrentes reutilizan la misma promesa de renovación.
     refreshing ||= axios.post(`${api.defaults.baseURL}/auth/refresh/`, {
       refresh: localStorage.getItem('refresh_token'),
     });

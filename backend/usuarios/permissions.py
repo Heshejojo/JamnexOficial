@@ -1,7 +1,11 @@
+"""Políticas de acceso a módulos según rol, método HTTP y permisos asignados."""
+
 from rest_framework.permissions import BasePermission
 
 
 class DashboardPermission(BasePermission):
+    """Permite consultar el resumen solo a roles o cuentas autorizados."""
+
     message = 'No tienes permiso para consultar el Dashboard.'
 
     def has_permission(self, request, view):
@@ -18,9 +22,12 @@ class DashboardPermission(BasePermission):
 
 
 class RolePermission(BasePermission):
+    """Restringe módulos y operaciones según el rol y permisos del usuario."""
+
     message = 'No tienes permisos para realizar esta acción.'
 
     def has_module_permission(self, request):
+        """Asocia rutas API a los permisos configurados para cada módulo."""
         role = getattr(getattr(request.user, 'rol', None), 'nombre', '').upper()
         if role == 'CONSULTA':
             return True
@@ -53,6 +60,7 @@ class RolePermission(BasePermission):
         return True
 
     def has_permission(self, request, view):
+        """Aplica primero el acceso por rol y después la restricción por módulo."""
         user = request.user
         if not user or not user.is_authenticated:
             return False

@@ -1,3 +1,5 @@
+"""Validación y representación de SIM, conflictos y asignaciones."""
+
 from rest_framework import serializers
 from django.db import transaction
 

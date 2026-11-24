@@ -35,7 +35,12 @@ import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
+/**
+ * Puente entre Flutter y las APIs Android para permisos, telemetría, SIMs,
+ * planificación del trabajo en segundo plano y solicitudes a la API.
+ */
 class MainActivity : FlutterActivity() {
+	// Los nombres de canal deben coincidir con los servicios MethodChannel de Dart.
 	private val channelName = "agente_cfe/sim"
 	private val apiChannelName = "agente_cfe/api"
 	private val permissionRequestCode = 901
@@ -44,6 +49,7 @@ class MainActivity : FlutterActivity() {
 	private val apiNetworkSessionLock = Any()
 	private var apiNetworkSession: ApiNetworkClient.Session? = null
 
+	/** Consulta el permiso especial que habilita estadísticas de uso de red. */
 	private fun hasUsageAccess(): Boolean {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
 		val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -54,12 +60,14 @@ class MainActivity : FlutterActivity() {
 		) == AppOpsManager.MODE_ALLOWED
 	}
 
+	/** Abre una sola vez la pantalla de ajustes si Android exige acceso de uso. */
 	private fun requestUsageAccessIfNeeded() {
 		if (hasUsageAccess() || usageAccessPromptShown) return
 		usageAccessPromptShown = true
 		startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
 	}
 
+	/** Enumera permisos runtime necesarios para consultar SIMs e identidad del teléfono. */
 	private fun requiredRuntimePermissions(): Array<String> {
 		val permissions = mutableListOf<String>()
 
@@ -78,6 +86,7 @@ class MainActivity : FlutterActivity() {
 		}.distinct().toTypedArray()
 	}
 
+	/** Solicita permisos faltantes y devuelve si la lectura debe esperar al usuario. */
 	private fun requestRequiredPermissionsIfNeeded(): Boolean {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
 		val missingPermissions = requiredRuntimePermissions()
@@ -88,11 +97,13 @@ class MainActivity : FlutterActivity() {
 		return missingPermissions.isNotEmpty()
 	}
 
+	/** Respaldo del número de línea cuando la información de la suscripción está vacía. */
 	private fun fallbackPhoneNumber(): String? {
 		return runCatching { getSystemService(Context.TELEPHONY_SERVICE).let { it as TelephonyManager }.line1Number }
 			.getOrNull()
 	}
 
+	/** Normaliza MCC preservando ceros iniciales en Android anterior a Q. */
 	private fun subscriptionMcc(subscription: android.telephony.SubscriptionInfo): String? {
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			subscription.mccString
@@ -101,6 +112,7 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	/** Normaliza MNC para que los campos antiguos y nuevos tengan formato de texto. */
 	private fun subscriptionMnc(subscription: android.telephony.SubscriptionInfo): String? {
 		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			subscription.mncString
@@ -109,12 +121,14 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	/** Acepta ICCID con longitud y caracteres esperados y descarta valores incompletos. */
 	private fun validIccid(value: String?): String? {
 		return value
 			?.trim()
 			?.takeIf { it.length in 18..22 && it.all(Char::isDigit) }
 	}
 
+	/** Prueba fuentes de ICCID por prioridad, ya que cada fabricante expone APIs distintas. */
 	private fun subscriptionIccid(
 		subscription: android.telephony.SubscriptionInfo,
 		telephonyManager: TelephonyManager,
@@ -135,6 +149,7 @@ class MainActivity : FlutterActivity() {
 			?: validIccid(defaultSubscription)
 	}
 
+	/** Busca el número de serie de Android; puede ser inaccesible en versiones recientes. */
 	private fun getDeviceSerial(): String? {
 		val frameworkSerial = runCatching {
 			when {
@@ -151,6 +166,7 @@ class MainActivity : FlutterActivity() {
 		}.getOrNull()?.takeUnless { it.isNullOrBlank() || it.equals("unknown", true) }
 	}
 
+	/** Solicita permisos iniciales antes de pedir acceso especial a estadísticas. */
 	override fun onCreate(savedInstanceState: android.os.Bundle?) {
 		super.onCreate(savedInstanceState)
 		if (!requestRequiredPermissionsIfNeeded()) {
@@ -158,10 +174,12 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	/** Registra los canales que permiten a Flutter llamar APIs y servicios nativos. */
 	override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
 		super.configureFlutterEngine(flutterEngine)
 		MethodChannel(flutterEngine.dartExecutor.binaryMessenger, apiChannelName).setMethodCallHandler { call, result ->
 			when (call.method) {
+				// Una sesión fija las redes disponibles para varios POST consecutivos.
 				"beginNetworkSession" -> Thread {
 					try {
 						val session = ApiNetworkClient(applicationContext).openSession()
@@ -175,6 +193,7 @@ class MainActivity : FlutterActivity() {
 					}
 				}.start()
 
+				// Cierra callbacks de red al terminar el lote o ante un error de Dart.
 				"endNetworkSession" -> {
 					synchronized(apiNetworkSessionLock) {
 						apiNetworkSession?.close()
@@ -183,6 +202,7 @@ class MainActivity : FlutterActivity() {
 					result.success(null)
 				}
 
+				// Valida argumentos en el hilo de UI y hace el acceso de red en segundo plano.
 				"postJson" -> {
 					val baseUrl = call.argument<String>("baseUrl")
 					val endpoint = call.argument<String>("endpoint")
@@ -214,6 +234,7 @@ class MainActivity : FlutterActivity() {
 		}
 
 		MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName).setMethodCallHandler { call, result ->
+			// Este canal expone permisos y telemetría de telefonía al código Flutter.
 			if (call.method == "requestPermissions") {
 				if (!requestRequiredPermissionsIfNeeded()) {
 					requestUsageAccessIfNeeded()
@@ -223,6 +244,7 @@ class MainActivity : FlutterActivity() {
 			}
 
 			if (call.method == "scheduleBackgroundSync") {
+				// Conserva la URL y registra una tarea periódica, otra al reconectar y un watchdog.
 				val baseUrl = call.argument<String>("baseUrl")
 				if (baseUrl.isNullOrBlank()) {
 					result.error("invalid_base_url", "La URL de la API está vacía.", null)
@@ -287,6 +309,7 @@ class MainActivity : FlutterActivity() {
 			}
 
 			if (call.method == "getTelemetry") {
+				// La recolección nativa se ejecuta fuera del hilo UI para mantener fluida la app.
 				if (!requestRequiredPermissionsIfNeeded()) {
 					requestUsageAccessIfNeeded()
 				}
@@ -305,6 +328,7 @@ class MainActivity : FlutterActivity() {
 				return@setMethodCallHandler
 			}
 
+			// Distingue falta de permiso de una consulta correcta que devolvió cero SIMs.
 			val missingPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 				requiredRuntimePermissions()
 			} else {
@@ -322,6 +346,7 @@ class MainActivity : FlutterActivity() {
 			try {
 				val subscriptionManager =
 					getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+				// Algunos fabricantes no completan la lista activa; se consulta cada ranura como respaldo.
 				var subscriptions = subscriptionManager?.activeSubscriptionInfoList.orEmpty()
 				if (subscriptions.isEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
 					val telephonyManager =
@@ -343,6 +368,7 @@ class MainActivity : FlutterActivity() {
 				}
 				val telephonyManager =
 					getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+				// Devuelve una forma estable a Flutter, normalizando datos que Android puede ocultar.
 				result.success(mapOf("readable" to true, "sims" to subscriptions.map { subscription ->
 					mapOf(
 						"subscription_id" to subscription.subscriptionId,
@@ -367,6 +393,7 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	/** Reanuda el flujo de permisos especiales tras el diálogo de permisos runtime. */
 	override fun onRequestPermissionsResult(
 		requestCode: Int,
 		permissions: Array<out String>,
@@ -381,6 +408,7 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	/** Lee métricas de sistema, telephony y aplicaciones visibles para la pantalla Flutter. */
 	private fun collectTelemetry(): Map<String, Any?> {
 		val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
 		val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -426,6 +454,7 @@ class MainActivity : FlutterActivity() {
 		)
 	}
 
+	/** Identifica la SIM configurada para los datos móviles, si Android lo permite. */
 	private fun defaultDataSimSlot(): Int? = try {
 		val manager = getSystemService(SubscriptionManager::class.java)
 		val subscriptions = manager?.activeSubscriptionInfoList.orEmpty()
@@ -439,14 +468,17 @@ class MainActivity : FlutterActivity() {
 		null
 	}
 
+	/** Convierte memoria o almacenamiento a MB sin redondear hacia arriba. */
 	private fun bytesToMb(value: Long): Double {
 		return value.toDouble() / (1024.0 * 1024.0)
 	}
 
+	/** Misma conversión para valores de capacidad obtenidos como Double. */
 	private fun bytesToMb(value: Double): Double {
 		return value / (1024.0 * 1024.0)
 	}
 
+	/** Consulta el consumo móvil del periodo reciente; permisos o APIs pueden impedirlo. */
 	private fun queryMobileDataUsage(days: Int): Double? {
 		return try {
 			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return null
@@ -477,6 +509,7 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	/** Agrupa el tipo de radio activo en generaciones 2G a 5G para la API. */
 	private fun networkTechnology(telephonyManager: TelephonyManager): String? {
 		return runCatching {
 			when (telephonyManager.dataNetworkType) {
@@ -500,6 +533,7 @@ class MainActivity : FlutterActivity() {
 		}.getOrNull()
 	}
 
+	/** Lista aplicaciones visibles según las reglas de package visibility de Android. */
 	private fun visibleApplications(): List<Map<String, Any?>> {
 		return packageManager.getInstalledApplications(PackageManager.GET_META_DATA).map { app ->
 			val packageInfo = runCatching { packageManager.getPackageInfo(app.packageName, 0) }.getOrNull()

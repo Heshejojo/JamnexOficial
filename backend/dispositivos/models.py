@@ -1,3 +1,5 @@
+"""Identidad, credenciales y asignaciones de dispositivos móviles."""
+
 from datetime import timedelta
 
 from django.db import models
@@ -8,6 +10,8 @@ from trabajadores.models import Trabajador
 
 
 class Dispositivo(models.Model):
+    """Equipo registrado con su actividad reciente y SIM reportadas."""
+
     device_uuid = models.CharField(max_length=255, unique=True, null=True, blank=True)
     fabricante = models.CharField(max_length=120, null=True, blank=True)
     modelo = models.CharField(max_length=120, null=True, blank=True)
@@ -37,6 +41,7 @@ class Dispositivo(models.Model):
 
     @property
     def esta_activo(self):
+        """Indica si el equipo está habilitado y tuvo contacto en las últimas 72 h."""
         return bool(
             self.activo
             and self.ultimo_contacto
@@ -53,6 +58,8 @@ class Dispositivo(models.Model):
 
 
 class CredencialDispositivo(models.Model):
+    """Token del equipo almacenado como hash para autenticar sincronizaciones."""
+
     dispositivo = models.OneToOneField(Dispositivo, on_delete=models.CASCADE, related_name='credencial')
     token_hash = models.CharField(max_length=128, unique=True)
     creado_at = models.DateTimeField(auto_now_add=True)
@@ -64,6 +71,8 @@ class CredencialDispositivo(models.Model):
 
 
 class AsignacionDispositivo(models.Model):
+    """Relación de asignación entre un dispositivo y un trabajador."""
+
     dispositivo = models.ForeignKey(Dispositivo, on_delete=models.CASCADE, related_name='asignaciones')
     trabajador = models.ForeignKey(Trabajador, on_delete=models.CASCADE, related_name='dispositivos_asignados')
     fecha_asignacion = models.DateTimeField(auto_now_add=True)

@@ -1,3 +1,5 @@
+"""Serializador de mediciones de batería."""
+
 from rest_framework import serializers
 
 from .models import RegistroBateria

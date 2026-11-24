@@ -1,3 +1,5 @@
+"""Rutas para SIM, historial, transferencias y asignaciones."""
+
 from django.urls import path
 
 from .views import (

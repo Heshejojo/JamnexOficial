@@ -1,4 +1,9 @@
+/// Fotografía inmutable de identidad, hardware, red, SIMs y consumo del teléfono.
+///
+/// Los campos opcionales representan datos que Android puede ocultar por versión,
+/// permisos o limitaciones del fabricante.
 class DeviceSnapshot {
+  // Identidad y sistema operativo reportados por Android.
   final String? deviceId;
   final String? fabricante;
   final String? modelo;
@@ -7,15 +12,18 @@ class DeviceSnapshot {
   final String? imei2;
   final String? serial;
   final int? androidSdk;
+  // Capacidades de memoria y almacenamiento, expresadas en megabytes.
   final int? ramTotalMb;
   final int? ramUsedMb;
   final int? ramAvailableMb;
   final int? almacenamientoTotalMb;
   final int? almacenamientoUsadoMb;
   final int? almacenamientoDisponibleMb;
+  // Estado instantáneo de batería y conectividad.
   final int? batteryPercent;
   final String? batteryStatus;
   final String? connectionType;
+  // Medidas complementarias de red celular y SIM activa.
   final double? batteryTemperature;
   final double? mobileDataMb;
   final double? mobileDataDayMb;
@@ -26,11 +34,14 @@ class DeviceSnapshot {
   final int? carrierId;
   final bool roaming;
   final bool? simsReadable;
+  // Registros completos capturados por los canales Flutter y Android.
   final List<Map<String, dynamic>> applications;
   final List<Map<String, dynamic>> sims;
   final bool connected;
+  // Momento local de captura; se convierte a UTC al serializar para el servidor.
   final DateTime timestamp;
 
+  /// Construye una lectura sin mutaciones posteriores.
   const DeviceSnapshot({
     this.deviceId,
     this.fabricante,
@@ -65,6 +76,7 @@ class DeviceSnapshot {
     required this.timestamp,
   });
 
+  /// Reduce la fotografía a los campos que acepta el endpoint de registro.
   Map<String, dynamic> toBackendPayload() {
     return {
       'device_uuid': deviceId,
@@ -82,6 +94,7 @@ class DeviceSnapshot {
     };
   }
 
+  /// Crea otra fotografía conservando todo salvo los identificadores solicitados.
   DeviceSnapshot copyWith({
     String? imei1,
     String? imei2,

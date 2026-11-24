@@ -1,3 +1,5 @@
+"""Consumos reportados y acumuladores que hacen idempotente la sincronización."""
+
 from django.db import models
 
 from dispositivos.models import Dispositivo
@@ -5,6 +7,8 @@ from sims.models import Sim
 
 
 class Consumo(models.Model):
+    """Lectura histórica que se conserva mientras exista el dispositivo asociado."""
+
     PERIODICIDAD_CHOICES = [
         ('diario', 'Diario'),
         ('semanal', 'Semanal'),
@@ -30,6 +34,8 @@ class Consumo(models.Model):
 
 
 class ConsumoSyncState(models.Model):
+    """Último acumulado diario recibido para una combinación equipo, fecha y SIM."""
+
     dispositivo = models.ForeignKey(
         Dispositivo,
         on_delete=models.CASCADE,

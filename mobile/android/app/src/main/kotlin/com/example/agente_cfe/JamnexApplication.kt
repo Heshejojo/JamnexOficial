@@ -13,11 +13,16 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import io.flutter.app.FlutterApplication
 
+/**
+ * Observa el transporte predeterminado desde el inicio del proceso y programa
+ * una sincronización cuando se conecta o cambia entre Wi-Fi y datos móviles.
+ */
 class JamnexApplication : FlutterApplication() {
 	private var activeNetworkTransport: String? = null
 
 	override fun onCreate() {
 		super.onCreate()
+		// registerDefaultNetworkCallback no existe en versiones Android anteriores a N.
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return
 
 		val connectivityManager =
@@ -26,6 +31,7 @@ class JamnexApplication : FlutterApplication() {
 			connectivityManager.registerDefaultNetworkCallback(
 				object : ConnectivityManager.NetworkCallback() {
 					override fun onAvailable(network: Network) {
+						// No basta con que exista una red: debe ofrecer acceso a Internet.
 						updateNetworkState(networkTransport(connectivityManager.getNetworkCapabilities(network)))
 					}
 
@@ -59,6 +65,7 @@ class JamnexApplication : FlutterApplication() {
 	}
 
 	private fun networkTransport(capabilities: NetworkCapabilities?): String? {
+		// Se ignoran redes locales sin Internet y transportes distintos a Wi-Fi/celular.
 		if (capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) != true) {
 			return null
 		}
@@ -71,11 +78,13 @@ class JamnexApplication : FlutterApplication() {
 
 	@Synchronized
 	private fun updateNetworkState(transport: String?) {
+		// Sincroniza una sola vez por cambio real de transporte para evitar duplicados.
 		val networkChanged = transport != null && transport != activeNetworkTransport
 		activeNetworkTransport = transport
 		if (!networkChanged) return
 
 		val preferences = getSharedPreferences("JamnexBackgroundSync", Context.MODE_PRIVATE)
+		// La URL se guarda al programar el trabajo desde Flutter.
 		val baseUrl = preferences.getString("base_url", null)?.trimEnd('/')
 		if (baseUrl.isNullOrBlank()) return
 
@@ -88,6 +97,7 @@ class JamnexApplication : FlutterApplication() {
 			.setInputData(workDataOf("base_url" to baseUrl))
 			.build()
 		try {
+			// REPLACE cancela una tarea obsoleta si el usuario cambió de tipo de red.
 			WorkManager.getInstance(applicationContext).enqueueUniqueWork(
 				"jamnex_network_sync",
 				ExistingWorkPolicy.REPLACE,

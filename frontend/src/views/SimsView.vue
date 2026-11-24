@@ -1,4 +1,5 @@
 <template>
+  <!-- Administra SIMs, consumo e historial de asignaciones por dispositivo. -->
   <div class="sims-page">
     <header class="topbar">
       <div>
@@ -283,6 +284,7 @@ const historyLoading = ref(false);
 const historyError = ref('');
 
 const displayHistory = computed(() => {
+  // El backend puede devolver tramos consecutivos; se compactan para mostrar una línea por asignación.
   const compacted = [];
   for (const record of history.value) {
     const previous = compacted[compacted.length - 1];
@@ -353,6 +355,7 @@ async function loadSims() {
   loading.value = true;
   loadError.value = '';
   try {
+    // Las colecciones se combinan localmente para enriquecer cada SIM con red y consumo.
     const [simsResponse, consumptionResponse, networksResponse, devicesResponse, conflictsResponse] = await Promise.all([
       api.get('/sims/'),
       api.get('/consumos/'),
@@ -553,6 +556,7 @@ async function loadHistory(simId) {
   const request = ++historyRequest;
   historyLoading.value = true;
   try {
+    // Ignora respuestas atrasadas si el usuario cambió de SIM mientras cargaba el historial.
     const { data } = await api.get(`/sims/${simId}/historial/`);
     if (request !== historyRequest) return;
     history.value = data.historial || [];
@@ -583,6 +587,7 @@ async function exportMonthlyReport() {
   if (!selectedSim.value) return;
   const [year, month] = selectedMonth.value.split('-');
   try {
+    // El blob se descarga directamente para no exponer el archivo en otra ruta de la aplicación.
     const response = await api.get(`/reportes/sims/${selectedSim.value.id}/exportar/`, {
       params: { anio: year, mes: month, formato: 'xlsx' },
       responseType: 'blob',

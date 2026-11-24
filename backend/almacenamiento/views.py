@@ -1,3 +1,5 @@
+"""Vistas de lectura para el historial de almacenamiento."""
+
 from rest_framework import generics
 
 from usuarios.permissions import RolePermission

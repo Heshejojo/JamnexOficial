@@ -1,3 +1,5 @@
+"""Validación y representación de estados de conectividad."""
+
 from rest_framework import serializers
 
 from .models import RegistroRed

@@ -1,3 +1,5 @@
+"""Pruebas de permisos y contenido del resumen del dashboard."""
+
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -10,6 +12,8 @@ from usuarios.models import Rol, Usuario
 
 
 class DashboardSummaryPermissionTest(TestCase):
+    """Verifica acceso aislado al dashboard y el conteo de equipos asignados."""
+
     def setUp(self):
         role = Rol.objects.create(nombre='VIEWER', activo=True)
         user = Usuario.objects.create_user(

@@ -1,0 +1,1 @@
+"""Registro de acciones relevantes realizadas en la aplicación."""

@@ -1,3 +1,5 @@
+"""Rutas de registro, sincronización y administración de dispositivos."""
+
 from django.urls import path
 
 from .views import (

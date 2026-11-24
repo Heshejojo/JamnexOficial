@@ -1,3 +1,5 @@
+"""Enrutamiento raíz de la API y de la administración de Django."""
+
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path

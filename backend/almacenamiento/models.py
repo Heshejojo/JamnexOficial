@@ -1,3 +1,5 @@
+"""Modelo para mediciones de almacenamiento reportadas por los dispositivos."""
+
 from django.db import models
 
 from dispositivos.models import Dispositivo

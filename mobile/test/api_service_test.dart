@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  // Simula un token revocado: el servicio debe registrarse de nuevo y repetir el POST.
   test('refreshes a rejected device token and retries the request', () async {
     SharedPreferences.setMockInitialValues({'device_token': 'stale-token'});
     debugDefaultTargetPlatformOverride = TargetPlatform.android;

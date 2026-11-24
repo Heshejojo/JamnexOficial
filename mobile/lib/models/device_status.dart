@@ -1,3 +1,4 @@
+/// Modelo ligero de estado del dispositivo para serializaciones auxiliares.
 class DeviceStatus {
   final String? deviceId;
   final String? model;
@@ -15,6 +16,7 @@ class DeviceStatus {
     this.timestamp,
   });
 
+  /// Convierte el modelo al contrato JSON usado por servicios compatibles.
   Map<String, dynamic> toJson() => {
         'device_id': deviceId,
         'model': model,

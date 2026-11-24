@@ -1,3 +1,5 @@
+"""Rutas de consulta de consumo de datos."""
+
 from django.urls import path
 
 from .views import ConsumoDetailAPIView, ConsumoListAPIView

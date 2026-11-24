@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Fondo neutro usado por el icono adaptable del launcher. -->
     <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

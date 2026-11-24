@@ -1,3 +1,5 @@
+"""API para enrolamiento, monitoreo y sincronización de dispositivos."""
+
 import hashlib
 import secrets
 from datetime import timedelta
@@ -32,6 +34,8 @@ DEVICE_MODEL_FIELDS = {
 
 
 class DeviceAuthentication(authentication.BaseAuthentication):
+    """Autentica equipos comparando el token recibido con su hash almacenado."""
+
     keyword = 'Device'
 
     def authenticate(self, request):
@@ -53,6 +57,8 @@ class DeviceAuthentication(authentication.BaseAuthentication):
 
 
 class DeviceRegisterView(APIView):
+    """Registra o actualiza la identidad del equipo y emite una credencial."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -88,6 +94,7 @@ class DeviceRegisterView(APIView):
                     update_fields.append(field)
             device.save(update_fields=update_fields)
         raw_token = secrets.token_urlsafe(32)
+        # El token solo se entrega en esta respuesta; la base conserva su hash.
         CredencialDispositivo.objects.update_or_create(
             dispositivo=device,
             defaults={'token_hash': hashlib.sha256(raw_token.encode()).hexdigest(), 'revocado': False},
@@ -96,6 +103,8 @@ class DeviceRegisterView(APIView):
 
 
 class DeviceStatusView(APIView):
+    """Recibe el estado del equipo y sus mediciones actuales."""
+
     authentication_classes = [DeviceAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -137,6 +146,8 @@ class DeviceStatusView(APIView):
 
 
 class DeviceIdentityView(APIView):
+    """Actualiza seriales e ICCID sin permitir duplicar una identidad de SIM."""
+
     authentication_classes = [DeviceAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -189,6 +200,8 @@ class DeviceIdentityView(APIView):
 
 
 class DeviceNetworkView(APIView):
+    """Registra el tipo de conectividad reportado por el dispositivo."""
+
     authentication_classes = [DeviceAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -206,6 +219,8 @@ class DeviceNetworkView(APIView):
 
 
 class DeviceSimView(APIView):
+    """Sincroniza una SIM, su operador y su presencia actual en el equipo."""
+
     authentication_classes = [DeviceAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -279,6 +294,7 @@ class DeviceSimView(APIView):
                 sim.save(update_fields=[*update_fields, 'updated_at'])
 
             if transferred:
+                # Mantiene trazable el cambio de equipo sin crear otra SIM para el mismo ICCID.
                 resolved_at = timezone.now()
                 SimTransferConflict.objects.filter(
                     sim=sim,
@@ -312,6 +328,8 @@ class DeviceSimView(APIView):
 
 
 class DeviceSimStatusView(APIView):
+    """Registra el inventario de ranuras para cerrar SIM ausentes."""
+
     authentication_classes = [DeviceAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -335,6 +353,8 @@ class DeviceSimStatusView(APIView):
 
 
 class DeviceConsumptionView(APIView):
+    """Integra reportes acumulados de consumo evitando sumar dos veces un reintento."""
+
     authentication_classes = [DeviceAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -425,6 +445,7 @@ class DeviceConsumptionView(APIView):
                 state.ultimo_acumulado_mb = previous_daily_total
 
             delta = (
+                # Un contador menor indica reinicio del acumulado; se suma como tramo nuevo.
                 mobile_data - state.ultimo_acumulado_mb
                 if mobile_data >= state.ultimo_acumulado_mb
                 else mobile_data
@@ -473,6 +494,8 @@ class DeviceConsumptionView(APIView):
 
 
 class DeviceRevokeView(APIView):
+    """Revoca la credencial de un dispositivo."""
+
     permission_classes = [RolePermission]
 
     def post(self, request, pk):
@@ -488,10 +511,10 @@ class DeviceRevokeView(APIView):
 
 
 def dispositivos_queryset():
-    """Dispositivos con cuantas SIM distintas han tenido en los ultimos 30 dias.
+    """Cuenta SIM distintas con presencia en el historial durante los últimos 30 días.
 
-    Sirve aunque el celular no mande el ICCID: cada SIM que entra a un equipo
-    queda registrada, asi que un equipo que cambia mucho de SIM se nota.
+    El historial permite detectar cambios de SIM incluso si el equipo no reporta
+    su ICCID actual.
     """
     cutoff = timezone.now() - timedelta(days=30)
     return Dispositivo.objects.select_related(

@@ -1,12 +1,14 @@
 name: agente_cfe
 description: Aplicación móvil Jamnex.
 publish_to: 'none'
-version: 1.1.8+12
+# Versión visible y número de compilación Android; ambos valores se incrementan al publicar.
+version: 1.1.9+13
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
+  # Plugins para batería, conectividad, datos del dispositivo y almacenamiento local.
   battery_plus: ^7.1.1
   connectivity_plus: ^7.3.1
   device_info_plus: ^13.2.0
@@ -22,6 +24,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
 
 flutter_launcher_icons:
+  # Genera el icono Android a partir de la imagen compartida con el frontend.
   android: true
   ios: false
   image_path: "../frontend/images/Logo1.jpg"

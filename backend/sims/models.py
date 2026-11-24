@@ -1,3 +1,5 @@
+"""SIM, asignaciones e intervalos históricos de presencia y transferencia."""
+
 from django.db import models
 from django.db.models import Q
 
@@ -7,6 +9,7 @@ from trabajadores.models import Trabajador
 
 
 def normalize_iccid(value):
+    """Normaliza variantes de formato de ICCID para identificar una misma SIM."""
     normalized = ''.join(character for character in str(value or '').upper() if character.isalnum())
     if normalized.startswith('S') and normalized[1:].isdigit():
         normalized = normalized[1:]
@@ -17,6 +20,8 @@ def normalize_iccid(value):
 
 
 class Sim(models.Model):
+    """Identidad y estado actual de una tarjeta SIM."""
+
     dispositivo = models.ForeignKey(Dispositivo, on_delete=models.SET_NULL, null=True, blank=True, related_name='sims')
     sim_uuid = models.CharField(max_length=255, unique=True, null=True, blank=True)
     iccid = models.CharField(max_length=255, null=True, blank=True)
@@ -42,6 +47,7 @@ class Sim(models.Model):
         return self.sim_uuid or self.iccid or f'SIM {self.pk}'
 
     def save(self, *args, **kwargs):
+        """Mantiene el ICCID normalizado incluso en guardados parciales."""
         self.iccid_normalized = normalize_iccid(self.iccid)
         update_fields = kwargs.get('update_fields')
         if update_fields is not None and 'iccid_normalized' not in update_fields:
@@ -50,6 +56,8 @@ class Sim(models.Model):
 
 
 class HistorialSim(models.Model):
+    """Intervalo histórico que sobrevive al borrado del equipo, pero no de la SIM."""
+
     sim = models.ForeignKey(Sim, on_delete=models.CASCADE, related_name='historial')
     dispositivo = models.ForeignKey(
         Dispositivo,
@@ -74,6 +82,8 @@ class HistorialSim(models.Model):
 
 
 class SimTransferConflict(models.Model):
+    """Solicitud concurrente de transferencia que requiere resolución explícita."""
+
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pendiente'
         TRANSFERRED = 'TRANSFERRED', 'Transferida'
@@ -114,6 +124,8 @@ class SimTransferConflict(models.Model):
 
 
 class AsignacionSim(models.Model):
+    """Asignación de una SIM a un dispositivo y trabajador."""
+
     sim = models.ForeignKey(Sim, on_delete=models.CASCADE, related_name='asignaciones')
     dispositivo = models.ForeignKey(Dispositivo, on_delete=models.CASCADE, related_name='sims_asignadas')
     trabajador = models.ForeignKey(Trabajador, on_delete=models.CASCADE, related_name='sims_asignadas')

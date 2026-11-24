@@ -1,3 +1,5 @@
+"""Punto de entrada WSGI para publicar el proyecto Django."""
+
 import os
 
 from django.core.wsgi import get_wsgi_application

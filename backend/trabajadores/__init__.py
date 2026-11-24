@@ -1,0 +1,1 @@
+"""Catálogo de trabajadores asociados a dispositivos y SIM."""

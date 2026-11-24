@@ -1,0 +1,1 @@
+"""Registros históricos del estado de batería de los dispositivos."""

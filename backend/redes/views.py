@@ -1,3 +1,5 @@
+"""Vistas de consulta del historial de conectividad de red."""
+
 from rest_framework import generics, permissions
 
 from .models import RegistroRed

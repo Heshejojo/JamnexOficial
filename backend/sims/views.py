@@ -1,3 +1,5 @@
+"""API de SIM, actividad histórica, transferencias y asignaciones."""
+
 from datetime import timedelta
 
 from django.db import transaction
@@ -66,6 +68,8 @@ class SimTransferConflictListAPIView(generics.ListAPIView):
 
 
 class SimMovimientosAPIView(APIView):
+    """Clasifica las inserciones recientes como nuevas, repetidas o transferidas."""
+
     permission_classes = [RolePermission]
 
     @staticmethod
@@ -114,6 +118,8 @@ class SimMovimientosAPIView(APIView):
 
 
 class SimHistorialAPIView(APIView):
+    """Devuelve los intervalos de presencia y su consumo asociado."""
+
     permission_classes = [RolePermission]
 
     @staticmethod
@@ -157,9 +163,12 @@ class SimHistorialAPIView(APIView):
 
 
 class SimTransferConflictActionAPIView(APIView):
+    """Resuelve transferencias pendientes de forma atómica y serializada."""
+
     permission_classes = [RolePermission]
 
     def post(self, request, pk, action):
+        """Confirma, descarta o reconoce una transferencia pendiente."""
         if action not in {'transfer', 'dismiss', 'acknowledge'}:
             return Response({'detail': 'Acción no válida.'}, status=400)
         with transaction.atomic():
@@ -186,6 +195,7 @@ class SimTransferConflictActionAPIView(APIView):
                         status=409,
                     )
                 if sim.dispositivo_id != conflict.source_device_id:
+                    # Evita trasladar una SIM si su equipo de origen cambió entretanto.
                     conflict.status = SimTransferConflict.Status.STALE
                     conflict.resolved_at = timezone.now()
                     conflict.save(update_fields=['status', 'resolved_at'])

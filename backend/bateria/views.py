@@ -1,3 +1,5 @@
+"""Vistas de lectura para las mediciones de batería."""
+
 from rest_framework import generics
 
 from usuarios.permissions import RolePermission

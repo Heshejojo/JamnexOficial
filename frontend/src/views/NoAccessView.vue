@@ -1,4 +1,5 @@
 <template>
+  <!-- Informa al usuario cuando la guardia del router no encuentra un módulo permitido. -->
   <section class="no-access" role="status">
     <span class="no-access-icon" aria-hidden="true">⊘</span>
     <p class="eyebrow">Acceso restringido</p>

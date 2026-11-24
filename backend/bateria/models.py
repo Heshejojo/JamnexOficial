@@ -1,3 +1,5 @@
+"""Modelo para conservar mediciones de batería reportadas por dispositivo."""
+
 from django.db import models
 
 from dispositivos.models import Dispositivo

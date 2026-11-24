@@ -1,0 +1,1 @@
+"""Consumo de datos y estado de sincronización por dispositivo y SIM."""

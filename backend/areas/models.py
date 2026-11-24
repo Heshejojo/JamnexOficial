@@ -1,3 +1,5 @@
+"""Modelos para la jerarquía operativa y la ubicación de dispositivos."""
+
 from django.db import models
 from django.db.models import Q
 

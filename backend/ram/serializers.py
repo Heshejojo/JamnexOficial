@@ -1,3 +1,5 @@
+"""Serializador de mediciones de memoria RAM."""
+
 from rest_framework import serializers
 
 from .models import RegistroRam

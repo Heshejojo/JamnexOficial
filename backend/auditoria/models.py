@@ -1,3 +1,5 @@
+"""Modelo de bitácora para acciones administrativas y de exportación."""
+
 from django.db import models
 
 from usuarios.models import Usuario

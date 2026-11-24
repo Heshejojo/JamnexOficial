@@ -1,3 +1,5 @@
+"""Catálogo de operadores asociados a las tarjetas SIM."""
+
 from django.db import models
 
 

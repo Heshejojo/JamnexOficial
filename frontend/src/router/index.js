@@ -1,3 +1,4 @@
+// Define las rutas y centraliza autenticación y redirecciones por permiso.
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
@@ -53,6 +54,7 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const auth = useAuthStore();
   if (to.meta.requiresAuth && !auth.token) return '/login';
+  // Se refresca el usuario antes de autorizar para no depender de permisos cacheados.
   if (to.meta.requiresAuth) await auth.fetchCurrentUser();
   if (to.meta.requiresAuth && !auth.token) return '/login';
 

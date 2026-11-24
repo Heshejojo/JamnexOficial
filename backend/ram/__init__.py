@@ -1,0 +1,1 @@
+"""Registros históricos de memoria RAM de los dispositivos."""

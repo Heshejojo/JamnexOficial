@@ -1,3 +1,5 @@
+"""Rutas de consulta de mediciones de almacenamiento."""
+
 from django.urls import path
 
 from .views import RegistroAlmacenamientoDetailAPIView, RegistroAlmacenamientoListAPIView

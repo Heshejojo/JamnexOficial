@@ -1,3 +1,5 @@
+"""Apertura y cierre transaccional de intervalos de presencia de SIM."""
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -5,6 +7,7 @@ from .models import HistorialSim
 
 
 def register_presence(sim, dispositivo, slot=None):
+    """Registra presencia y cierra el intervalo desplazado por equipo o ranura."""
     if sim is None or dispositivo is None:
         return None
 
@@ -43,6 +46,11 @@ def register_presence(sim, dispositivo, slot=None):
 
 
 def close_missing(dispositivo, expected_count, reported_at=None, reported_slots=None):
+    """Cierra presencias ausentes: prioriza ranuras reportadas y usa el conteo de respaldo.
+
+    Si no se conoce el conteo, conserva las presencias abiertas; los intervalos cerrados
+    permanecen disponibles para consultar el historial.
+    """
     if dispositivo is None:
         return None
 

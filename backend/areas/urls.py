@@ -1,3 +1,5 @@
+"""Rutas para administrar procesos, áreas y zonas de dispositivos."""
+
 from django.urls import path
 
 from .views import (

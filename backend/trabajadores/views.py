@@ -1,3 +1,5 @@
+"""API para consultar, crear, editar y eliminar trabajadores."""
+
 from rest_framework import generics, permissions
 
 from .models import Trabajador

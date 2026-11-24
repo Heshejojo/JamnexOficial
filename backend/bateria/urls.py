@@ -1,3 +1,5 @@
+"""Rutas de consulta de mediciones de batería."""
+
 from django.urls import path
 
 from .views import RegistroBateriaDetailAPIView, RegistroBateriaListAPIView

@@ -5,8 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Cliente de la API del dispositivo; en Android delega el transporte a Kotlin
+/// para conservar una ruta celular o Wi-Fi durante cada sincronización.
 class ApiService {
+  // Estos canales deben coincidir con los nombres registrados en MainActivity.kt.
   static const MethodChannel _apiChannel = MethodChannel('agente_cfe/api');
+  // La URL se puede cambiar al compilar mediante --dart-define=API_BASE_URL=...
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'https://jamnex-api.cfe.mx/api',
@@ -14,6 +18,7 @@ class ApiService {
 
   String? _deviceToken;
 
+  /// Abre y siempre cierra la sesión de red nativa alrededor de un grupo de llamadas.
   Future<T> withNetworkSession<T>(Future<T> Function() action) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return action();
@@ -27,6 +32,7 @@ class ApiService {
     }
   }
 
+  /// Actualiza el token en memoria y lo guarda para los siguientes arranques.
   void setDeviceToken(String token) {
     _deviceToken = token;
     SharedPreferences.getInstance().then((preferences) {
@@ -34,11 +40,13 @@ class ApiService {
     });
   }
 
+  /// Restaura la credencial emitida por el backend desde almacenamiento local.
   Future<void> loadDeviceToken() async {
     final preferences = await SharedPreferences.getInstance();
     _deviceToken = preferences.getString('device_token');
   }
 
+  /// Registra el equipo y conserva el token que autoriza sus siguientes reportes.
   Future<String> registerDevice(Map<String, dynamic> payload) async {
     final response = await _post('/device/register/', payload);
     final token = response['token'] as String?;
@@ -51,12 +59,14 @@ class ApiService {
     return token;
   }
 
+  /// Devuelve la credencial guardada o registra el equipo si aún no existe.
   Future<String> ensureDeviceRegistered(Map<String, dynamic> payload) async {
     final token = _deviceToken;
     if (token != null && token.isNotEmpty) return token;
     return registerDevice(payload);
   }
 
+  /// Envía un evento autenticado; si el servidor revoca el token, lo renueva una vez.
   Future<Map<String, dynamic>> postDeviceJson(
     String endpoint,
     Map<String, dynamic> payload, {
@@ -84,6 +94,7 @@ class ApiService {
     }
   }
 
+  /// Envía un reporte opcional: solo ignora 404 para que backend antiguo sea compatible.
   Future<void> postDeviceJsonIfAvailable(
     String endpoint,
     Map<String, dynamic> payload, {
@@ -103,6 +114,7 @@ class ApiService {
     }
   }
 
+  /// Implementa el POST común y traduce respuestas nativas/HTTP a un mismo resultado.
   Future<Map<String, dynamic>> _post(
     String endpoint,
     Map<String, dynamic> payload, {
@@ -111,6 +123,7 @@ class ApiService {
     late final int statusCode;
     late final String responseBody;
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      // Android abre la URL sobre la red seleccionada y devuelve código más cuerpo.
       final response = await _apiChannel.invokeMapMethod<String, dynamic>(
         'postJson',
         {
@@ -129,6 +142,7 @@ class ApiService {
       statusCode = response['statusCode'] as int;
       responseBody = response['body'] as String? ?? '';
     } else {
+      // Para pruebas web/no Android se usa el cliente HTTP de Dart directamente.
       final response = await http
           .post(
             Uri.parse('$baseUrl$endpoint'),
@@ -157,6 +171,7 @@ class ApiService {
   }
 }
 
+/// Error de transporte/API con estado HTTP y texto de respuesta para diagnóstico.
 class ApiException implements Exception {
   final int statusCode;
   final String message;

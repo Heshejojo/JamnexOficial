@@ -1,3 +1,5 @@
+"""Validación y representación de trabajadores."""
+
 from rest_framework import serializers
 
 from areas.models import Area

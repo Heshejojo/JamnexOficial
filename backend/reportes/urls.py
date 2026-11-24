@@ -1,3 +1,5 @@
+"""Rutas del resumen operativo y de exportación de reportes."""
+
 from django.urls import path
 
 from .views import DashboardSummaryView, DevicesMonthlyExportView, SimMonthlyExportView

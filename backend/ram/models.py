@@ -1,3 +1,5 @@
+"""Modelo para registrar mediciones de memoria RAM de cada dispositivo."""
+
 from django.db import models
 
 from dispositivos.models import Dispositivo

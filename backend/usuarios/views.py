@@ -1,3 +1,5 @@
+"""API de inicio de sesión, perfil propio y administración de cuentas y roles."""
+
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView

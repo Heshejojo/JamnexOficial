@@ -1,3 +1,5 @@
+"""Vistas de consulta de consumos protegidas por permisos de módulo."""
+
 from rest_framework import generics, permissions
 
 from .models import Consumo

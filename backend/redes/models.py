@@ -1,3 +1,5 @@
+"""Modelo para conservar los estados de conectividad de los dispositivos."""
+
 from django.db import models
 
 from dispositivos.models import Dispositivo

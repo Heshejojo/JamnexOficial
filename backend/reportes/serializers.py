@@ -1,0 +1,1 @@
+"""Los reportes actuales construyen sus respuestas directamente en las vistas."""

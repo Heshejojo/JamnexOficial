@@ -16,13 +16,19 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+/**
+ * Abre conexiones de red Android y enlaza cada POST a una red celular o Wi-Fi concreta.
+ * La sesión agrupa solicitudes para no cambiar de transporte a mitad de una sincronización.
+ */
 class ApiNetworkClient(context: Context) {
+	// El HTTP interno sin cifrar se permite únicamente en builds debug.
 	private val isDebugBuild =
 		(context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 	private val connectivityManager =
 		context.getSystemService(ConnectivityManager::class.java)
 			?: error("ConnectivityManager no disponible")
 
+	/** Solicita ambas redes posibles y devuelve una sesión que libera sus callbacks al cerrarse. */
 	fun openSession(): Session {
 		val cellular = requestNetwork(
 			NetworkCapabilities.TRANSPORT_CELLULAR,
@@ -39,6 +45,7 @@ class ApiNetworkClient(context: Context) {
 		return Session(cellular, wifi)
 	}
 
+	/** Espera la red pedida hasta el límite configurado y libera el callback si no aparece. */
 	private fun requestNetwork(transport: Int, label: String): NetworkLease? {
 		val request = NetworkRequest.Builder()
 			.addTransportType(transport)
@@ -65,6 +72,7 @@ class ApiNetworkClient(context: Context) {
 			}
 
 			override fun onLost(lostNetwork: Network) {
+				// El lease observa esta referencia y evita enviar por una red que ya se perdió.
 				Log.w(TAG, "Red $label perdida")
 				network.compareAndSet(lostNetwork, null)
 			}
@@ -95,12 +103,17 @@ class ApiNetworkClient(context: Context) {
 		private val cellular: NetworkLease?,
 		private val wifi: NetworkLease?,
 	) : Closeable {
+		/**
+		 * Prueba las URL y redes disponibles en orden; conserva la última excepción
+		 * para que el llamador reciba un fallo explícito si todas las rutas fallan.
+		 */
 		fun post(
 			baseUrl: String,
 			endpoint: String,
 			payload: JSONObject,
 			token: String?,
 		): Pair<Int, String> {
+			// Solo el endpoint público puede usar las rutas internas configuradas como respaldo.
 			val baseUrls = if (baseUrl.trimEnd('/') == DEFAULT_API_BASE_URL) {
 				listOfNotNull(
 					baseUrl,
@@ -149,11 +162,13 @@ class ApiNetworkClient(context: Context) {
 		}
 
 		override fun close() {
+			// Desregistra solicitudes de red y evita retener callbacks de Android.
 			cellular?.close()
 			wifi?.close()
 		}
 	}
 
+	/** Realiza un POST JSON ligado a Network; siempre desconecta el socket al finalizar. */
 	private fun postOnNetwork(
 		network: Network,
 		baseUrl: String,
@@ -196,6 +211,7 @@ class ApiNetworkClient(context: Context) {
 		private val callback: ConnectivityManager.NetworkCallback,
 		val network: AtomicReference<Network?>,
 	) : Closeable {
+		/** Libera el callback de solicitud aunque Android ya haya invalidado la red. */
 		override fun close() {
 			runCatching {
 				connectivityManager.unregisterNetworkCallback(callback)
@@ -206,6 +222,7 @@ class ApiNetworkClient(context: Context) {
 	}
 
 	private companion object {
+		// Límites de espera y rutas de servicio para solicitudes nativas.
 		const val TAG = "JamnexApiNetwork"
 		const val DEFAULT_API_BASE_URL = "https://jamnex-api.cfe.mx/api"
 		const val INTERNAL_API_BASE_URL = "https://10.14.64.15/api"

@@ -1,0 +1,1 @@
+"""Modelos para registrar el almacenamiento de los dispositivos."""

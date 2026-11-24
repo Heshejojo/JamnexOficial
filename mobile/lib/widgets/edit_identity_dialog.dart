@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Diálogo que permite corregir la serie del equipo y los ICCID detectados.
+///
+/// No envía datos por sí mismo: devuelve un mapa a la pantalla, que lo persiste
+/// localmente y coordina el reintento contra el backend.
 class EditIdentityDialog extends StatefulWidget {
   const EditIdentityDialog({
     super.key,
@@ -17,6 +21,7 @@ class EditIdentityDialog extends StatefulWidget {
 }
 
 class _EditIdentityDialogState extends State<EditIdentityDialog> {
+  // Cada controlador pertenece a un campo y se libera cuando se cierra el diálogo.
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _serialController;
   final Map<String, TextEditingController> _simControllers = {};
@@ -25,6 +30,7 @@ class _EditIdentityDialogState extends State<EditIdentityDialog> {
   @override
   void initState() {
     super.initState();
+    // Los valores actuales se muestran para que la edición sea incremental.
     _serialController = TextEditingController(text: widget.serial);
     for (final entry in widget.simTargets.entries) {
       _simControllers[entry.key] =
@@ -34,6 +40,7 @@ class _EditIdentityDialogState extends State<EditIdentityDialog> {
 
   @override
   void dispose() {
+    // Evita mantener controladores vivos después de cerrar la ventana.
     _serialController.dispose();
     for (final controller in _simControllers.values) {
       controller.dispose();
@@ -42,6 +49,7 @@ class _EditIdentityDialogState extends State<EditIdentityDialog> {
   }
 
   void _save() {
+    // Primero valida longitudes y elimina entradas vacías del resultado.
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final serial = _serialController.text.trim();
     final sims = <Map<String, dynamic>>[];
@@ -54,6 +62,7 @@ class _EditIdentityDialogState extends State<EditIdentityDialog> {
       }..remove('label'));
     }
     if (serial.isEmpty && sims.isEmpty) {
+      // No se acepta un guardado sin ninguna corrección que persistir.
       setState(() {
         _validationMessage = 'Escribe un número de serie o al menos un ICCID.';
       });

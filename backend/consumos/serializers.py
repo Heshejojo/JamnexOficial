@@ -1,3 +1,5 @@
+"""Representación de registros de consumo de datos."""
+
 from rest_framework import serializers
 
 from .models import Consumo

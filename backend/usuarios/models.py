@@ -1,8 +1,11 @@
+"""Modelos de cuenta, roles y permisos configurables por usuario."""
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
 def default_permisos():
+    """Permisos iniciales para cuentas nuevas, organizados por módulo."""
     return {
         'dashboard': True,
         'dispositivos': True,

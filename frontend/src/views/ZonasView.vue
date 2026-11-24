@@ -1,4 +1,5 @@
 <template>
+  <!-- Navega el catálogo jerárquico y asigna terminales a departamentos mediante el API. -->
   <div class="zones-page">
     <header class="page-header">
       <div>
@@ -295,6 +296,7 @@ async function loadData() {
     zone: selectedArea.value?.id,
   };
   try {
+    // Se restauran las selecciones previas solo si aún pertenecen a la jerarquía vigente.
     const [processResponse, divisionResponse, zoneResponse, deviceResponse] = await Promise.all([
       api.get('/procesos/'),
       api.get('/subprocesos/'),
@@ -498,6 +500,7 @@ async function assignDevices() {
   savingAssignment.value = true;
   modalError.value = '';
   try {
+    // Se envía una actualización por terminal porque cada asignación tiene su propio recurso.
     for (const deviceId of selectedDeviceIds.value) {
       await api.patch(`/zonas/dispositivos/${deviceId}/`, { area_id: selectedArea.value.id });
     }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!-- Fondo de inicio adaptado al color de sistema en Android 5.0 o posterior. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="?android:colorBackground" />
 
-    <!-- You can insert your own image assets here -->
+    <!-- Puede agregarse una imagen centrada si se requiere personalizar la pantalla de inicio. -->
     <!-- <item>
         <bitmap
             android:gravity="center"

@@ -29,12 +29,18 @@ import java.net.HttpURLConnection
 import java.util.Calendar
 import kotlin.math.roundToInt
 
+/**
+ * Recolecta y envía telemetría cuando WorkManager detecta una red disponible.
+ * Los reintentos y límites de ejecución quedan bajo control del sistema Android.
+ */
 class JamnexSyncWorker(
 	context: Context,
 	parameters: WorkerParameters,
 ) : Worker(context, parameters) {
+	// Mantiene el transporte fijado durante todos los POST de esta ejecución.
 	private var apiNetworkSession: ApiNetworkClient.Session? = null
 
+	/** Valida la configuración, transmite la captura y libera recursos en todos los casos. */
 	override fun doWork(): Result {
 		val baseUrl = inputData.getString("base_url")?.trimEnd('/')
 		if (baseUrl.isNullOrBlank()) return Result.failure()
@@ -50,6 +56,7 @@ class JamnexSyncWorker(
 			}
 			Result.success()
 		} catch (error: Exception) {
+			// WorkManager volverá a ejecutar la tarea siguiendo su política de backoff.
 			Log.e("JamnexSyncWorker", "La sincronización en segundo plano falló", error)
 			Result.retry()
 		} finally {
@@ -58,6 +65,7 @@ class JamnexSyncWorker(
 		}
 	}
 
+	/** Programa una ejecución futura para volver a revisar la conectividad periódicamente. */
 	private fun scheduleNextNetworkWatchdog(baseUrl: String) {
 		val request = OneTimeWorkRequestBuilder<JamnexSyncWorker>()
 			.setConstraints(
@@ -80,6 +88,10 @@ class JamnexSyncWorker(
 		)
 	}
 
+	/**
+	 * Construye la identidad y lectura actual del teléfono, registra/renueva el token,
+	 * y envía estado, red, SIMs y consumo móvil en ese orden.
+	 */
 	private fun sync(baseUrl: String) {
 		val deviceUuid = Settings.Secure.getString(
 			applicationContext.contentResolver,
@@ -122,6 +134,7 @@ class JamnexSyncWorker(
 		val ramAvailableMb = bytesToMb(memory.availMem)
 		val storageTotalMb = bytesToMb(totalStorage)
 		val storageAvailableMb = bytesToMb(availableStorage)
+		// El payload de registro también sirve para renovar la credencial si el backend la revoca.
 		val devicePayload = json(
 			"device_uuid" to deviceUuid,
 			"fabricante" to Build.MANUFACTURER,
@@ -134,6 +147,7 @@ class JamnexSyncWorker(
 			"ram_total" to ramTotalMb,
 			"almacenamiento_total" to storageTotalMb,
 		)
+		// Flutter y WorkManager comparten la preferencia del token del dispositivo.
 		val storedToken = applicationContext
 			.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
 			.getString("flutter.device_token", null)
@@ -168,6 +182,7 @@ class JamnexSyncWorker(
 			devicePayload,
 		)
 
+		// null significa que no fue posible leer SIMs; una lista vacía es un resultado válido.
 		val subscriptionRead = activeSubscriptions()
 		val subscriptions = subscriptionRead.orEmpty()
 		subscriptions.forEach { subscription ->
@@ -207,6 +222,7 @@ class JamnexSyncWorker(
 			)
 		}
 
+		// Los reportes diarios se asocian a la SIM de datos predeterminada si Android la identifica.
 		val dataSimSlot = defaultDataSimSlot(subscriptions)
 		val monthDays = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
 		val monthlyUsage = mobileUsageMb(monthDays)
@@ -241,6 +257,7 @@ class JamnexSyncWorker(
 		}
 	}
 
+	/** Envía el evento y renueva una sola vez el token ante respuestas 401/403. */
 	private fun postDevice(
 		baseUrl: String,
 		endpoint: String,
@@ -252,6 +269,7 @@ class JamnexSyncWorker(
 	): String {
 		var effectivePayload = payload
 		var response = request(baseUrl, endpoint, effectivePayload, currentToken)
+		// Algunos servidores antiguos aceptan el reporte básico pero no los campos extendidos.
 		if (response.first == HttpURLConnection.HTTP_BAD_REQUEST && badRequestFallback != null) {
 			Log.w(
 				"JamnexSyncWorker",
@@ -283,6 +301,7 @@ class JamnexSyncWorker(
 		return refreshedToken
 	}
 
+	/** Registra el equipo, valida el token devuelto y lo comparte con el código Flutter. */
 	private fun registerDevice(baseUrl: String, payload: JSONObject): String {
 		val response = request(baseUrl, "/device/register/", payload, null)
 		if (response.first !in 200..299) {
@@ -298,6 +317,7 @@ class JamnexSyncWorker(
 		return token
 	}
 
+	/** Usa exclusivamente la sesión de red abierta por doWork para todo POST. */
 	private fun request(
 		baseUrl: String,
 		endpoint: String,
@@ -306,6 +326,7 @@ class JamnexSyncWorker(
 	): Pair<Int, String> = apiNetworkSession?.post(baseUrl, endpoint, payload, token)
 		?: error("La sesión de red para la API no está disponible.")
 
+	/** Resume el transporte activo en los valores definidos por el contrato de la API. */
 	private fun connectionState(): Pair<Boolean, String> {
 		val manager = applicationContext.getSystemService(ConnectivityManager::class.java)
 		val capabilities = manager.getNetworkCapabilities(manager.activeNetwork)
@@ -317,6 +338,7 @@ class JamnexSyncWorker(
 		}
 	}
 
+	/** Devuelve null si faltan permisos o el servicio de suscripciones no está disponible. */
 	private fun activeSubscriptions(): List<SubscriptionInfo>? = try {
 		val manager = applicationContext.getSystemService(SubscriptionManager::class.java)
 			?: return null
@@ -325,6 +347,7 @@ class JamnexSyncWorker(
 		null
 	}
 
+	/** Busca la ranura de la SIM de datos predeterminada; usa la única SIM como fallback. */
 	private fun defaultDataSimSlot(subscriptions: List<SubscriptionInfo>): Int? = try {
 		val manager = applicationContext.getSystemService(SubscriptionManager::class.java)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -337,6 +360,7 @@ class JamnexSyncWorker(
 		null
 	}
 
+	/** Consulta el acumulado móvil desde el inicio del mes y convierte bytes a MB. */
 	private fun mobileUsageMb(days: Int): Double? {
 		return try {
 			val telephony = applicationContext.getSystemService(TelephonyManager::class.java)
@@ -367,6 +391,7 @@ class JamnexSyncWorker(
 		}
 	}
 
+	/** Consulta el uso móvil de un día concreto; null indica falta de acceso o de datos. */
 	private fun mobileUsageForDay(dayOffset: Int): Double? {
 		return try {
 			val telephony = applicationContext.getSystemService(TelephonyManager::class.java)
@@ -401,6 +426,7 @@ class JamnexSyncWorker(
 		}
 	}
 
+	/** Representa el final del día correspondiente como fecha ISO UTC para el backend. */
 	private fun dayEndIso(dayOffset: Int): String =
 		java.time.Instant.ofEpochMilli(
 			Calendar.getInstance().apply {
@@ -412,6 +438,7 @@ class JamnexSyncWorker(
 			}.timeInMillis,
 		).toString()
 
+	/** Obtiene la serie usando Android primero y getprop solo como alternativa. */
 	private fun deviceSerial(): String? {
 		val frameworkSerial = runCatching {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Build.getSerial() else Build.SERIAL
@@ -425,6 +452,7 @@ class JamnexSyncWorker(
 		}.getOrNull()?.takeUnless { it.isNullOrBlank() || it.equals("unknown", true) }
 	}
 
+	/** El acceso IMEI puede estar restringido por Android, permisos o el fabricante. */
 	private fun imei(telephony: TelephonyManager, slot: Int): String? =
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			runCatching { telephony.getImei(slot) }.getOrNull()
@@ -432,6 +460,7 @@ class JamnexSyncWorker(
 			null
 		}
 
+	/** Compatibilidad MCC para APIs antiguas, cuyos campos son números enteros. */
 	private fun subscriptionMcc(subscription: SubscriptionInfo): String? =
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			subscription.mccString
@@ -439,6 +468,7 @@ class JamnexSyncWorker(
 			subscription.mcc.takeIf { it > 0 }?.toString()?.padStart(3, '0')
 		}
 
+	/** Compatibilidad MNC para APIs antiguas, cuyos campos son números enteros. */
 	private fun subscriptionMnc(subscription: SubscriptionInfo): String? =
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			subscription.mncString
@@ -446,6 +476,7 @@ class JamnexSyncWorker(
 			subscription.mnc.takeIf { it > 0 }?.toString()
 		}
 
+	/** Agrupa los tipos de radio de Android en generaciones de red entendibles por la API. */
 	private fun networkTechnology(telephony: TelephonyManager): String = when (
 		telephony.dataNetworkType
 	) {
@@ -467,9 +498,11 @@ class JamnexSyncWorker(
 		else -> "Desconocida"
 	}
 
+	/** Mantiene una única conversión binaria de bytes a MB para los campos de capacidad. */
 	private fun bytesToMb(value: Long): Int =
 		(value.toDouble() / (1024.0 * 1024.0)).toInt()
 
+	/** Omite nulos para que los payloads no confundan datos desconocidos con valores vacíos. */
 	private fun json(vararg fields: Pair<String, Any?>): JSONObject =
 		JSONObject().apply {
 			fields.forEach { (key, value) ->

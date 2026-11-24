@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // Verifica que la corrección manual devuelve los datos editados y cierra el diálogo.
   testWidgets('identifier dialog saves and closes cleanly',
       (WidgetTester tester) async {
     Map<String, dynamic>? result;
@@ -49,6 +50,7 @@ void main() {
     expect(result?['sims'], hasLength(1));
   });
 
+  // Comprueba que la pantalla raíz y su estado básico se construyen correctamente.
   testWidgets('Agente CFE app loads', (WidgetTester tester) async {
     await tester.pumpWidget(const AgenteCfeApp());
 

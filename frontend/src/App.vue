@@ -61,6 +61,7 @@
 </template>
 
 <script setup>
+// Contenedor autenticado: muestra la navegación permitida y mantiene actualizados los permisos.
 import { computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { CreditCard, LayoutDashboard, MapPin, Smartphone, Users } from '@lucide/vue';
@@ -77,6 +78,7 @@ const permissionRoutes = [
 ];
 let permissionRefreshTimer;
 
+// Superadmin y Consulta tienen acceso transversal; el resto depende del mapa de permisos.
 const userName = computed(() => auth.user?.first_name || auth.user?.username || 'Administrador');
 const roleName = computed(() => auth.user?.rol?.nombre || 'Superadmin');
 const can = (key) => auth.user?.is_superuser
@@ -92,6 +94,7 @@ const initials = computed(() => {
 });
 
 onMounted(() => {
+  // El backend puede cambiar roles mientras la sesión sigue abierta.
   permissionRefreshTimer = window.setInterval(() => {
     if (auth.token) auth.fetchCurrentUser();
   }, 60000);

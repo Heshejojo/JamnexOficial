@@ -1,3 +1,5 @@
+"""Rutas de consulta de estados de conectividad."""
+
 from django.urls import path
 
 from .views import RegistroRedDetailAPIView, RegistroRedListAPIView

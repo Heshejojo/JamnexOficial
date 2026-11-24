@@ -1,4 +1,5 @@
 <template>
+  <!-- Gestiona cuentas y permisos; los perfiles de consulta solo pueden visualizar esta vista. -->
   <div class="crud-page">
     <header class="page-header"><div><p class="eyebrow">Administración de acceso</p><h2>Usuarios</h2><p class="page-caption">Gestiona cuentas, permisos y acceso al panel de control.</p></div><div class="topbar-actions"><span class="sync-state" :class="{ syncing: loading, failed: loadError }"><i></i>{{ loadError ? 'Sin conexión' : loading ? 'Sincronizando' : `Actualizado ${lastSync}` }}</span><button class="primary-btn" :disabled="loading" @click="load">Actualizar</button></div></header>
     <div class="grid-layout">
@@ -121,6 +122,7 @@ const filtered = computed(() => items.value.filter((item) =>
 
 watch(isConsultaRole, (isConsulta) => {
   if (isConsulta) {
+    // Consulta siempre ve todos los módulos, aunque no se editen casillas manualmente.
     for (const permission of permissionOptions) {
       form.permisos[permission.key] = true;
     }
@@ -131,6 +133,7 @@ async function load() {
   loading.value = true;
   loadError.value = '';
   try {
+    // Roles y usuarios se cargan juntos para mantener consistente el selector de asignación.
     const [users, roleData] = await Promise.all([
       api.get('/usuarios/'),
       api.get('/roles/').catch(() => ({ data: [] })),
@@ -208,6 +211,7 @@ function roleLabel(name) {
 async function save() {
   const isEditingSelf = editingId.value === auth.user?.id;
   const removingOwnUsersAccess = isEditingSelf && !form.permisos.usuarios;
+  // Evita que una cuenta se deje sin administración accidentalmente; el backend sigue validando.
   if (removingOwnUsersAccess && !window.confirm('Te estás quitando el acceso a Usuarios a ti mismo. ¿Seguro?')) return;
 
   loading.value = true;

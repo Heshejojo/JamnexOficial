@@ -1,3 +1,5 @@
+"""Validación de metadatos, estado y sincronizaciones de dispositivos."""
+
 from rest_framework import serializers
 
 from .models import AsignacionDispositivo, Dispositivo
@@ -93,6 +95,8 @@ class DeviceSimSerializer(serializers.Serializer):
 
 
 class DeviceIdentitySimSerializer(serializers.Serializer):
+    """Valida la identidad de SIM requerida para asociar un ICCID al dispositivo."""
+
     sim_uuid = serializers.CharField(max_length=255, required=False)
     slot = serializers.IntegerField(min_value=0, required=False)
     iccid = serializers.CharField(max_length=255, allow_blank=False)
@@ -104,6 +108,8 @@ class DeviceIdentitySimSerializer(serializers.Serializer):
 
 
 class DeviceIdentitySerializer(serializers.Serializer):
+    """Acepta una identidad de equipo, SIM o ambas para la actualización."""
+
     serial = serializers.CharField(max_length=255, required=False, allow_blank=False)
     sims = DeviceIdentitySimSerializer(many=True, required=False, allow_empty=False)
 
@@ -114,6 +120,8 @@ class DeviceIdentitySerializer(serializers.Serializer):
 
 
 class DeviceSimStatusSerializer(serializers.Serializer):
+    """Valida la cantidad y las ranuras SIM presentes en un reporte del equipo."""
+
     sim_count = serializers.IntegerField(min_value=0, max_value=10)
     sim_slots = serializers.ListField(
         child=serializers.IntegerField(min_value=0, max_value=10),

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Por defecto se rechazan conexiones sin cifrar para todos los destinos. -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+    <!-- El API público acepta las autoridades del sistema y la CA empresarial incluida. -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="false">jamnex-api.cfe.mx</domain>
         <trust-anchors>
@@ -12,6 +14,7 @@
             <certificates src="@raw/cfe_ca" />
         </trust-anchors>
     </domain-config>
+    <!-- Excepción interna para pruebas; la aplicación restringe HTTP a builds debug. -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">10.14.64.15</domain>
         <trust-anchors>

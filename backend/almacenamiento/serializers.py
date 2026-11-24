@@ -1,3 +1,5 @@
+"""Serializadores de mediciones de almacenamiento."""
+
 from rest_framework import serializers
 
 from .models import RegistroAlmacenamiento

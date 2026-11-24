@@ -1,0 +1,1 @@
+"""Registros de conectividad de red de los dispositivos."""

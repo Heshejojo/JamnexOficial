@@ -1,0 +1,1 @@
+"""Catálogos de procesos, subprocesos y áreas de operación."""

@@ -1,3 +1,5 @@
+"""Datos de trabajadores vinculados a los activos de la organización."""
+
 from django.db import models
 
 from areas.models import Area

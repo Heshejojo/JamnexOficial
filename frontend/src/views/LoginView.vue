@@ -1,4 +1,5 @@
 <template>
+  <!-- Autentica la cuenta contra el API y conserva los tokens mediante el store. -->
   <div class="login-shell">
     <div class="login-panel">
       <section class="login-aside">
@@ -76,6 +77,7 @@ async function submitLogin() {
   errorMessage.value = '';
 
   try {
+    // El backend acepta usuario o correo en el mismo campo identificador.
     const response = await api.post('/auth/login/', {
       identifier: identifier.value.trim(),
       password: password.value,

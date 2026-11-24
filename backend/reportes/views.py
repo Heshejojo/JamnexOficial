@@ -1,3 +1,5 @@
+"""Resumen operativo y exportaciones mensuales en formato Excel."""
+
 from calendar import monthrange
 from collections import defaultdict
 from datetime import date, timedelta
@@ -25,6 +27,7 @@ XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 
 def _month_range(year, month):
+    """Devuelve el inicio inclusivo y el siguiente mes como límite exclusivo."""
     start = date(year, month, 1)
     end = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
     return start, end
@@ -47,6 +50,8 @@ def _style_header(row_cells):
 
 
 class DashboardSummaryView(APIView):
+    """Entrega métricas y consumo del mes con permiso de dashboard."""
+
     permission_classes = [DashboardPermission]
 
     def get(self, request):
@@ -112,6 +117,8 @@ class DashboardSummaryView(APIView):
 
 
 class SimMonthlyExportView(APIView):
+    """Genera una hoja de cálculo mensual para una SIM."""
+
     permission_classes = [RolePermission]
 
     def get(self, request, pk):
@@ -178,6 +185,8 @@ class SimMonthlyExportView(APIView):
 
 
 class DevicesMonthlyExportView(APIView):
+    """Genera resúmenes y detalle diario de consumo por dispositivo."""
+
     permission_classes = [RolePermission]
 
     def get(self, request):
